@@ -48,6 +48,7 @@ export const StickyNote: React.FC<StickyNoteProps> = ({
   const [isAddingTag, setIsAddingTag] = useState(false);
   const [newTagText, setNewTagText] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [isEditingReminder, setIsEditingReminder] = useState(false);
 
   const newChecklistInputRef = useRef<HTMLInputElement>(null);
   const newTagInputRef = useRef<HTMLInputElement>(null);
@@ -452,40 +453,58 @@ export const StickyNote: React.FC<StickyNoteProps> = ({
         )}
       </div>
 
-      {/* Reminder Datetime Section */}
-      <div className="flex flex-wrap items-center gap-1.5 mt-2 text-[11px]">
-        <div className="flex items-center gap-1.5 flex-1 min-w-[170px]">
-          <Bell className="w-3.5 h-3.5 shrink-0 opacity-70" />
-          <input
-            type="datetime-local"
-            value={reminderInputValue}
-            onChange={(e) => handleReminderChange(e.target.value)}
-            className="w-full bg-black/5 rounded px-2 py-0.5 text-[11px] focus:outline-none"
-            aria-label="Reminder date and time"
-          />
+      {/* Reminder Datetime Section (only shown when set or editing) */}
+      {(note.reminder || isEditingReminder) && (
+        <div className="flex flex-wrap items-center gap-1.5 mt-2 text-[11px] bg-black/5 p-1.5 rounded-md animate-in fade-in">
+          {isEditingReminder ? (
+            <div className="flex items-center gap-1.5 flex-1 min-w-[170px]">
+              <Bell className="w-3.5 h-3.5 shrink-0 text-blue-600" />
+              <input
+                type="datetime-local"
+                value={reminderInputValue}
+                onChange={(e) => handleReminderChange(e.target.value)}
+                className="w-full bg-white/80 rounded px-1.5 py-0.5 text-[11px] focus:outline-none"
+                aria-label="Reminder date and time"
+                autoFocus
+              />
+              <button
+                onClick={() => setIsEditingReminder(false)}
+                className="px-2 py-0.5 rounded bg-stone-700 text-white text-[10px] font-semibold"
+                title="Done"
+              >
+                Done
+              </button>
+            </div>
+          ) : (
+            reminderBadgeText && (
+              <div className="flex items-center justify-between w-full">
+                <span
+                  onClick={() => setIsEditingReminder(true)}
+                  className={`px-2 py-0.5 rounded text-[10px] font-medium cursor-pointer ${
+                    reminderBadgeText.isPast
+                      ? 'bg-rose-100 text-rose-800 border border-rose-200'
+                      : 'bg-blue-100 text-blue-800'
+                  }`}
+                  title="Click to edit reminder time"
+                >
+                  {reminderBadgeText.isPast ? '⚠️ Overdue: ' : '⏰ '}
+                  {reminderBadgeText.formatted}
+                </span>
+                <button
+                  onClick={() => {
+                    onUpdate(note.id, { reminder: null });
+                    setIsEditingReminder(false);
+                  }}
+                  className="p-1 rounded hover:bg-black/10 text-stone-500"
+                  title="Clear reminder"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            )
+          )}
         </div>
-        {reminderBadgeText && (
-          <div className="flex items-center gap-1">
-            <span
-              className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
-                reminderBadgeText.isPast
-                  ? 'bg-rose-100 text-rose-800 border border-rose-200'
-                  : 'bg-blue-100 text-blue-800'
-              }`}
-            >
-              {reminderBadgeText.isPast ? '⚠️ Overdue: ' : '⏰ '}
-              {reminderBadgeText.formatted}
-            </span>
-            <button
-              onClick={() => onUpdate(note.id, { reminder: null })}
-              className="p-1 rounded hover:bg-black/5 text-stone-500"
-              title="Clear reminder"
-            >
-              <X className="w-3 h-3" />
-            </button>
-          </div>
-        )}
-      </div>
+      )}
 
       {/* Bottom Footer Toolbar */}
       <div className="flex items-center justify-between mt-3 pt-2 border-t border-black/5 text-stone-500 text-xs">
@@ -527,6 +546,17 @@ export const StickyNote: React.FC<StickyNoteProps> = ({
               </div>
             )}
           </div>
+
+          {/* Reminder / Bell Button */}
+          <button
+            onClick={() => setIsEditingReminder(!isEditingReminder)}
+            className={`p-1.5 rounded hover:bg-black/5 transition ${
+              note.reminder ? 'text-blue-600' : 'text-stone-400 hover:text-stone-700'
+            }`}
+            title={note.reminder ? 'Edit reminder' : 'Set reminder'}
+          >
+            <Bell className={`w-3.5 h-3.5 ${note.reminder ? 'fill-current' : ''}`} />
+          </button>
 
           {/* Duplicate Note */}
           <button

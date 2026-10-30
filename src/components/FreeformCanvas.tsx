@@ -128,18 +128,16 @@ export const FreeformCanvas: React.FC<FreeformCanvasProps> = ({
       onDoubleClick={handleCanvasDoubleClick}
       className="relative w-full min-h-[calc(100vh-140px)] min-w-full bg-paper-grid overflow-auto p-3 sm:p-8 select-none"
     >
-      {/* Canvas Utility Bar */}
+      {/* Floating Canvas Fit Utility Button */}
       {notes.length > 1 && (
-        <div className="sticky top-2 z-20 flex justify-end mb-2 pointer-events-none px-1">
-          <button
-            onClick={handleArrangeClick}
-            className="pointer-events-auto flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-cream-50/95 hover:bg-white text-stone-700 text-xs font-semibold shadow-md border border-cream-300 backdrop-blur-xs transition transform hover:scale-105 active:scale-95 touch-manipulation"
-            title="Auto-arrange sticky notes to fit screen"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-crimson-600" />
-            <span>Fit notes to screen</span>
-          </button>
-        </div>
+        <button
+          onClick={handleArrangeClick}
+          className="absolute top-2.5 right-3 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-cream-50/95 hover:bg-white text-stone-700 text-xs font-semibold shadow-md border border-cream-300 backdrop-blur-xs transition transform active:scale-95 touch-manipulation"
+          title="Auto-arrange sticky notes to fit screen"
+        >
+          <Sparkles className="w-3.5 h-3.5 text-crimson-600" />
+          <span>Fit notes to screen</span>
+        </button>
       )}
 
       {notes.map((note) => (

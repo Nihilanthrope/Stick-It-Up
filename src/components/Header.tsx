@@ -96,13 +96,13 @@ export const Header: React.FC<HeaderProps> = ({
             )}
           </div>
 
-          {/* Actions & View Controls */}
-          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-            {/* View Mode Toggle: Clear segmented control */}
-            <div className="flex items-center bg-cream-200 p-0.5 rounded-lg border border-cream-300/80 shadow-xs">
+          {/* Actions & View Controls (Desktop only - mobile uses bottom dock) */}
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            {/* View Mode Toggle (Desktop only) */}
+            <div className="hidden md:flex items-center bg-cream-200 p-0.5 rounded-lg border border-cream-300/80 shadow-xs">
               <button
                 onClick={() => onViewModeChange('canvas')}
-                className={`flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-md transition touch-manipulation ${
+                className={`flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-md transition touch-manipulation ${
                   viewMode === 'canvas'
                     ? 'bg-cream-50 text-crimson-700 shadow-xs'
                     : 'text-stone-600 hover:text-stone-900'
@@ -110,11 +110,11 @@ export const Header: React.FC<HeaderProps> = ({
                 title="Freeform Canvas"
               >
                 <Layers className="w-3.5 h-3.5" />
-                <span className="text-[11px] sm:text-xs">Canvas</span>
+                <span>Canvas</span>
               </button>
               <button
                 onClick={() => onViewModeChange('grid')}
-                className={`flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-md transition touch-manipulation ${
+                className={`flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-md transition touch-manipulation ${
                   viewMode === 'grid'
                     ? 'bg-cream-50 text-crimson-700 shadow-xs'
                     : 'text-stone-600 hover:text-stone-900'
@@ -122,14 +122,14 @@ export const Header: React.FC<HeaderProps> = ({
                 title="Grid Cards View"
               >
                 <LayoutGrid className="w-3.5 h-3.5" />
-                <span className="text-[11px] sm:text-xs">Grid</span>
+                <span>Grid</span>
               </button>
             </div>
 
-            {/* Quick Floating Overlay Toggle (Desktop & Tablet) */}
+            {/* Quick Floating Overlay Toggle */}
             <button
               onClick={onQuickOverlay}
-              className={`hidden md:flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition ${
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition ${
                 overlayActive
                   ? 'bg-crimson-100 text-crimson-800 border-crimson-300 shadow-xs'
                   : 'bg-cream-50 text-stone-700 border-cream-300 hover:bg-cream-200/60'
@@ -143,19 +143,19 @@ export const Header: React.FC<HeaderProps> = ({
               )}
             </button>
 
-            {/* Settings */}
+            {/* Settings (Desktop only) */}
             <button
               onClick={onOpenSettings}
-              className="p-1.5 sm:p-2 rounded-lg text-stone-600 hover:text-stone-900 hover:bg-cream-200 border border-transparent hover:border-cream-300 transition touch-manipulation"
+              className="hidden md:flex p-2 rounded-lg text-stone-600 hover:text-stone-900 hover:bg-cream-200 border border-transparent hover:border-cream-300 transition touch-manipulation"
               title="Settings"
             >
               <Settings className="w-4 h-4" />
             </button>
 
-            {/* New Note Button (Desktop) */}
+            {/* New Note Button (Desktop only) */}
             <button
               onClick={onNewNote}
-              className="hidden sm:flex items-center gap-1 px-3 py-1.5 bg-crimson-600 hover:bg-crimson-700 text-cream-50 text-xs font-semibold rounded-lg shadow-sm transition transform active:scale-95 touch-manipulation"
+              className="hidden sm:flex items-center gap-1.5 px-3.5 py-1.5 bg-crimson-600 hover:bg-crimson-700 text-cream-50 text-xs font-semibold rounded-lg shadow-sm transition transform active:scale-95 touch-manipulation"
               title="New Sticky Note"
             >
               <Plus className="w-4 h-4" />

@@ -79,6 +79,9 @@ describe('StickyNote Component', () => {
       />
     );
 
+    const bellBtn = screen.getByTitle(/set reminder|edit reminder/i);
+    fireEvent.click(bellBtn);
+
     const reminderInput = screen.getByLabelText(/reminder date and time/i);
     // Invalid datetime input should not throw RangeError
     expect(() => {
