@@ -139,11 +139,16 @@ export function App() {
     }
     setActiveTag(null);
 
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
+    const defaultPos = isMobile
+      ? { x: 16, y: Math.max(20, (notes.length % 5) * 50 + 20) }
+      : undefined;
+
     const newNote = store.createNote({
       title: 'New Thought 📌',
       content: '',
       color: defaultColor,
-      ...(position ? { position } : {}),
+      ...(position ? { position } : (defaultPos ? { position: defaultPos } : {})),
     });
     store.bringToFront(newNote.id);
   };
@@ -224,7 +229,7 @@ export function App() {
         archivedCount={archivedCount}
       />
 
-      <main className="flex-grow relative pb-20 md:pb-0">
+      <main className="flex-grow relative pb-28 md:pb-8">
         {viewMode === 'canvas' ? (
           <FreeformCanvas
             notes={filteredNotes}
@@ -249,53 +254,58 @@ export function App() {
         )}
       </main>
 
-      {/* Mobile workspace dock: keeps the main actions reachable with one thumb. */}
-      <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2 bg-cream-50/95 backdrop-blur-xl border-t border-cream-300/80 shadow-[0_-8px_30px_rgba(64,44,24,0.08)]">
-        <div className="max-w-md mx-auto grid grid-cols-4 gap-1 rounded-2xl bg-cream-200/70 p-1 border border-cream-300/70">
+      {/* Mobile workspace dock: ergonomic one-thumb access */}
+      <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2 bg-cream-50/95 backdrop-blur-xl border-t border-cream-300/80 shadow-[0_-8px_30px_rgba(64,44,24,0.08)]">
+        <div className="max-w-md mx-auto flex items-center justify-around px-2">
+          {/* Notes (Grid Cards) */}
           <button
             onClick={() => setViewMode('grid')}
-            className={`flex flex-col items-center gap-0.5 py-2 rounded-xl text-[10px] font-semibold transition ${viewMode === 'grid' ? 'bg-cream-50 text-crimson-700 shadow-sm' : 'text-stone-500'}`}
+            className={`flex flex-col items-center gap-1 py-1 px-3 rounded-xl text-[11px] font-semibold transition touch-manipulation ${
+              viewMode === 'grid'
+                ? 'text-crimson-700 bg-cream-200/80 shadow-xs'
+                : 'text-stone-500 hover:text-stone-800'
+            }`}
             aria-label="Grid view"
           >
-            <LayoutGrid className="w-4 h-4" />
-            Notes
+            <LayoutGrid className="w-5 h-5" />
+            <span>Cards</span>
           </button>
+
+          {/* Canvas View */}
           <button
             onClick={() => setViewMode('canvas')}
-            className={`flex flex-col items-center gap-0.5 py-2 rounded-xl text-[10px] font-semibold transition ${viewMode === 'canvas' ? 'bg-cream-50 text-crimson-700 shadow-sm' : 'text-stone-500'}`}
+            className={`flex flex-col items-center gap-1 py-1 px-3 rounded-xl text-[11px] font-semibold transition touch-manipulation ${
+              viewMode === 'canvas'
+                ? 'text-crimson-700 bg-cream-200/80 shadow-xs'
+                : 'text-stone-500 hover:text-stone-800'
+            }`}
             aria-label="Canvas view"
           >
-            <Layers className="w-4 h-4" />
-            Canvas
+            <Layers className="w-5 h-5" />
+            <span>Canvas</span>
           </button>
+
+          {/* Center Elevated Quick Create Button */}
           <button
             onClick={handleNewNote}
-            className="flex flex-col items-center gap-0.5 py-2 rounded-xl bg-crimson-600 text-cream-50 shadow-sm active:scale-95 transition"
-            aria-label="Create note"
+            className="flex items-center justify-center w-12 h-12 -mt-5 rounded-full bg-crimson-600 hover:bg-crimson-700 active:scale-90 text-cream-50 shadow-lg ring-4 ring-cream-100 transition transform touch-manipulation"
+            title="Create Sticky Note"
+            aria-label="Create Sticky Note"
           >
-            <Plus className="w-4 h-4" />
-            New
+            <Plus className="w-6 h-6 stroke-[2.5]" />
           </button>
+
+          {/* Filter / Search Indicator or Settings */}
           <button
             onClick={() => setIsSettingsOpen(true)}
-            className="flex flex-col items-center gap-0.5 py-2 rounded-xl text-[10px] font-semibold text-stone-500 hover:text-stone-800 transition"
+            className="flex flex-col items-center gap-1 py-1 px-3 rounded-xl text-[11px] font-semibold text-stone-500 hover:text-stone-800 transition touch-manipulation"
             aria-label="Open settings"
           >
-            <Settings className="w-4 h-4" />
-            Settings
+            <Settings className="w-5 h-5" />
+            <span>Settings</span>
           </button>
         </div>
       </nav>
-
-      {/* Mobile Floating Action Button (FAB) for quick note creation */}
-      <button
-        onClick={handleNewNote}
-        className="md:hidden fixed bottom-24 right-5 z-30 w-12 h-12 rounded-full bg-crimson-600 hover:bg-crimson-700 active:scale-95 text-cream-50 shadow-lg flex items-center justify-center transition-transform"
-        title="Add Sticky Note"
-        aria-label="Add Sticky Note"
-      >
-        <Pin className="w-5 h-5 fill-current" />
-      </button>
 
       <SettingsModal
         isOpen={isSettingsOpen}

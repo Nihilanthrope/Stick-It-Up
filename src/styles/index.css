@@ -40,17 +40,11 @@ button, a, input, [role="button"] {
   touch-action: manipulation;
 }
 
-/* Safe text sizes on mobile to prevent iOS Safari auto-zoom */
-@media (max-width: 767px) {
-  input[type="text"], input[type="search"], input[type="datetime-local"], textarea, select {
-    font-size: 16px !important;
-  }
-}
-
-/* Subtle scrollbars */
+/* Smooth touch scrolling for mobile filter lists */
 .no-scrollbar {
   scrollbar-width: none;
   -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
 }
 .no-scrollbar::-webkit-scrollbar {
   display: none;

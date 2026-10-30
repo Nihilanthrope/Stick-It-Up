@@ -203,15 +203,7 @@ export const StickyNote: React.FC<StickyNoteProps> = ({
       ref={noteRef}
       onClick={() => onBringToFront?.(note.id)}
       onMouseDown={(e) => {
-        const target = e.target as HTMLElement;
-        if (target.closest('input, textarea, button, select, [role="button"], a')) {
-          return;
-        }
-        if (isCanvasMode) {
-          onDragStart?.(e, note.id);
-        }
-      }}
-      onTouchStart={(e) => {
+        // Desktop mouse drag: allow grabbing from anywhere outside inputs/buttons
         const target = e.target as HTMLElement;
         if (target.closest('input, textarea, button, select, [role="button"], a')) {
           return;
@@ -236,24 +228,26 @@ export const StickyNote: React.FC<StickyNoteProps> = ({
         borderColor: theme.border,
         color: theme.text,
       }}
-      className={`group relative flex flex-col w-full max-w-[340px] sm:max-w-[300px] min-w-0 min-h-[240px] sm:min-h-[260px] rounded-sm p-3.5 sm:p-4 shadow-paper hover:shadow-paper-hover border ${
+      className={`group relative flex flex-col w-[calc(100vw-32px)] max-w-[340px] sm:w-[300px] min-w-0 min-h-[240px] sm:min-h-[260px] rounded-sm p-3.5 sm:p-4 shadow-paper hover:shadow-paper-hover border ${
         isCanvasMode ? 'cursor-grab active:cursor-grabbing' : ''
       } ${
         note.isPinned ? 'ring-2 ring-crimson-600/50' : ''
       }`}
     >
-      {/* Physical Tape Header (Drag Handle in canvas mode) */}
+      {/* Physical Tape Header (Primary Touch & Mouse Drag Handle) */}
       <div
         onMouseDown={(e) => isCanvasMode && onDragStart?.(e, note.id)}
         onTouchStart={(e) => isCanvasMode && onDragStart?.(e, note.id)}
         style={{ backgroundColor: theme.tape }}
-        className={`absolute -top-3 left-1/2 -translate-x-1/2 w-28 h-6 rounded-sm opacity-90 shadow-xs flex items-center justify-center transition-opacity hover:opacity-100 touch-none select-none ${
+        className={`absolute -top-3 left-1/2 -translate-x-1/2 w-32 h-7 rounded-sm opacity-95 shadow-xs flex items-center justify-center transition-opacity hover:opacity-100 touch-none select-none ${
           isCanvasMode ? 'cursor-grab active:cursor-grabbing' : ''
         }`}
-        title={isCanvasMode ? 'Drag to move note' : ''}
+        title={isCanvasMode ? 'Drag tape to move note' : ''}
       >
         {isCanvasMode && (
-          <GripHorizontal className="w-4 h-4 opacity-40 hover:opacity-80" />
+          <div className="flex items-center gap-1 opacity-70">
+            <GripHorizontal className="w-4 h-4" />
+          </div>
         )}
       </div>
 
@@ -269,6 +263,16 @@ export const StickyNote: React.FC<StickyNoteProps> = ({
         />
 
         <div className="flex items-center gap-1 opacity-90 group-hover:opacity-100 transition-opacity shrink-0">
+          {/* Mobile Dedicated Drag Handle button */}
+          {isCanvasMode && (
+            <div
+              onTouchStart={(e) => onDragStart?.(e, note.id)}
+              className="sm:hidden p-1.5 rounded touch-none text-stone-400 hover:text-stone-800"
+              title="Drag handle"
+            >
+              <GripHorizontal className="w-4 h-4" />
+            </div>
+          )}
           {/* Pin Button */}
           <button
             onClick={() => onUpdate(note.id, { isPinned: !note.isPinned })}

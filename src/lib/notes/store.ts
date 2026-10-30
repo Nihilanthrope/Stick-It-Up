@@ -40,6 +40,11 @@ export class NotesStore {
 
   public getDefaultNotes(): Note[] {
     const now = new Date().toISOString();
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
+    const pos1 = isMobile ? { x: 16, y: 20 } : { x: 30, y: 30 };
+    const pos2 = isMobile ? { x: 20, y: 310 } : { x: 360, y: 50 };
+    const pos3 = isMobile ? { x: 24, y: 600 } : { x: 690, y: 40 };
+
     return [
       {
         id: 'welcome-cream-crimson',
@@ -48,7 +53,7 @@ export class NotesStore {
         color: 'cream',
         isPinned: true,
         isArchived: false,
-        position: { x: 30, y: 30 },
+        position: pos1,
         zIndex: 10,
         checklist: [
           { id: 'item-1', text: 'Try dragging this sticky note', completed: false },
@@ -67,7 +72,7 @@ export class NotesStore {
         color: 'terracotta',
         isPinned: false,
         isArchived: false,
-        position: { x: 360, y: 50 },
+        position: pos2,
         zIndex: 5,
         checklist: [],
         reminder: null,
@@ -82,7 +87,7 @@ export class NotesStore {
         color: 'sage',
         isPinned: false,
         isArchived: false,
-        position: { x: 690, y: 40 },
+        position: pos3,
         zIndex: 4,
         checklist: [
           { id: 'c-1', text: 'Morning coffee & review notes', completed: true },
