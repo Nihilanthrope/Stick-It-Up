@@ -30,6 +30,9 @@ describe('Native Bridge', () => {
 
     const openResult = await bridge.openMainWindow();
     expect(openResult).toBe(false);
+
+    const moveResult = await bridge.moveOverlay(12, -4);
+    expect(moveResult).toBe(false);
   });
 
   it('delegates to registered native adapter when available', async () => {
@@ -41,6 +44,7 @@ describe('Native Bridge', () => {
       hideOverlay: vi.fn().mockResolvedValue(true),
       setMinimized: vi.fn().mockResolvedValue(true),
       openMainWindow: vi.fn().mockResolvedValue(true),
+      moveOverlay: vi.fn().mockResolvedValue(true),
     };
 
     registerNativeAdapter(mockAdapter);
@@ -55,5 +59,7 @@ describe('Native Bridge', () => {
     expect(mockAdapter.setMinimized).toHaveBeenCalledWith(true);
     expect(await bridge.hideOverlay()).toBe(true);
     expect(await bridge.openMainWindow()).toBe(true);
+    expect(await bridge.moveOverlay(12, -4)).toBe(true);
+    expect(mockAdapter.moveOverlay).toHaveBeenCalledWith(12, -4);
   });
 });

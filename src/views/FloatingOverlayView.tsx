@@ -16,6 +16,8 @@ import { NotesStore, getNotesStore } from '../lib/notes/store';
 import { OverlayNoteSync } from '../lib/overlay/note-sync';
 import { OverlayController, getOverlayController } from '../lib/overlay/controller';
 import { getTheme } from '../lib/theme';
+import { detectPlatform } from '../lib/platform/capabilities';
+import { getNativeBridge } from '../lib/platform/native-bridge';
 
 interface FloatingOverlayViewProps {
   initialNoteId?: string | null;
@@ -37,6 +39,8 @@ export const FloatingOverlayView: React.FC<FloatingOverlayViewProps> = ({
   );
   const [newChecklistText, setNewChecklistText] = useState('');
   const [showAddChecklist, setShowAddChecklist] = useState(false);
+  const androidDragRef = React.useRef<{ x: number; y: number } | null>(null);
+  const isAndroidOverlay = detectPlatform() === 'android';
 
   // Sync state with controller and external store changes
   useEffect(() => {
@@ -123,6 +127,29 @@ export const FloatingOverlayView: React.FC<FloatingOverlayViewProps> = ({
     controller.openMainWindow();
   };
 
+  const handleAndroidDragStart = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!isAndroidOverlay) return;
+    androidDragRef.current = { x: event.clientX, y: event.clientY };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+
+  const handleAndroidDragMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!isAndroidOverlay || !androidDragRef.current) return;
+    const previous = androidDragRef.current;
+    const dx = event.clientX - previous.x;
+    const dy = event.clientY - previous.y;
+    if (dx === 0 && dy === 0) return;
+    androidDragRef.current = { x: event.clientX, y: event.clientY };
+    void getNativeBridge().moveOverlay(dx, dy);
+  };
+
+  const handleAndroidDragEnd = (event: React.PointerEvent<HTMLDivElement>) => {
+    androidDragRef.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+  };
+
   // If minimized, display compact floating tab/bubble
   if (isMinimized) {
     return (
@@ -172,6 +199,10 @@ export const FloatingOverlayView: React.FC<FloatingOverlayViewProps> = ({
       {/* Draggable Titlebar for native window */}
       <div
         data-tauri-drag-region
+        onPointerDown={handleAndroidDragStart}
+        onPointerMove={handleAndroidDragMove}
+        onPointerUp={handleAndroidDragEnd}
+        onPointerCancel={handleAndroidDragEnd}
         style={{ backgroundColor: theme.tape }}
         className="flex items-center justify-between px-3 py-1.5 cursor-move border-b border-black/5"
       >

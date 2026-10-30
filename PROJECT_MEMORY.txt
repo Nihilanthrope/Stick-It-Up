@@ -60,3 +60,11 @@ STICK UP NOTES - PROJECT MEMORY & ARCHITECTURE STATUS
 - TypeScript: tsc --noEmit passed cleanly (0 errors).
 - Vite Build: Production build generated cleanly in dist/ (195 kB JS bundle, 25 kB CSS).
 ================================================================================
+
+7. Native overlay hardening (2026-10-30)
+- Android overlay was changed from a second native note editor to the shared React FloatingOverlayView inside a WindowManager WebView. This removes the previous synchronization split and keeps localStorage/notes/themes/checklists in one model.
+- Android overlay service is foreground-capable, uses SYSTEM_ALERT_WINDOW, supports minimize/restore/hide, and exposes native titlebar movement through the JS bridge.
+- Linux Tauri overlay now includes a Hyprland-specific runtime integration: when HYPRLAND_INSTANCE_SIGNATURE is present it floats, pins, and raises the overlay by title, then applies the intended 320x380 size.
+- Empty Tauri icon placeholders were replaced with valid RGBA PNG icons; invalid .icns/.ico placeholders were removed from bundle configuration.
+- Added @tauri-apps/cli 2.12.4 and an Android Gradle wrapper using Gradle 9.8.2.
+- Verification: 17 Vitest tests pass; TypeScript typecheck and Vite production build pass; Tauri cargo check passes; Tauri release binary and deb/rpm bundles build (AppImage bundling can still require external AppRun/linuxdeploy downloads); Android debug APK builds and was installed successfully to the connected Android 16 device.

@@ -9,6 +9,7 @@ export interface NativeBridge {
   hideOverlay(): Promise<boolean>;
   setMinimized(minimized: boolean): Promise<boolean>;
   openMainWindow(): Promise<boolean>;
+  moveOverlay(deltaX: number, deltaY: number): Promise<boolean>;
 }
 
 class WebFallbackBridge implements NativeBridge {
@@ -37,6 +38,10 @@ class WebFallbackBridge implements NativeBridge {
   }
 
   async openMainWindow(): Promise<boolean> {
+    return false;
+  }
+
+  async moveOverlay(_deltaX: number, _deltaY: number): Promise<boolean> {
     return false;
   }
 }
@@ -98,6 +103,10 @@ class TauriDesktopBridge implements NativeBridge {
       return false;
     }
   }
+
+  async moveOverlay(_deltaX: number, _deltaY: number): Promise<boolean> {
+    return false;
+  }
 }
 
 class AndroidNativeBridge implements NativeBridge {
@@ -149,6 +158,13 @@ class AndroidNativeBridge implements NativeBridge {
   async openMainWindow(): Promise<boolean> {
     if (this.android?.openApp) {
       return Boolean(this.android.openApp());
+    }
+    return false;
+  }
+
+  async moveOverlay(deltaX: number, deltaY: number): Promise<boolean> {
+    if (this.android?.moveOverlay) {
+      return Boolean(this.android.moveOverlay(deltaX, deltaY));
     }
     return false;
   }

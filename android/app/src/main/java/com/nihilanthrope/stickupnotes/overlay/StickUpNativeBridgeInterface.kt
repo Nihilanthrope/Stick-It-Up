@@ -2,6 +2,7 @@ package com.nihilanthrope.stickupnotes.overlay
 
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.webkit.JavascriptInterface
 import com.nihilanthrope.stickupnotes.MainActivity
 
@@ -34,7 +35,11 @@ class StickUpNativeBridgeInterface(private val context: Context) {
             action = StickUpOverlayService.ACTION_SHOW
             putExtra(StickUpOverlayService.EXTRA_NOTE_ID, noteId)
         }
-        context.startService(intent)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            context.startForegroundService(intent)
+        } else {
+            context.startService(intent)
+        }
         return true
     }
 
@@ -58,6 +63,11 @@ class StickUpNativeBridgeInterface(private val context: Context) {
         }
         context.startService(intent)
         return true
+    }
+
+    @JavascriptInterface
+    fun moveOverlay(deltaX: Int, deltaY: Int): Boolean {
+        return StickUpOverlayService.moveActiveOverlay(context, deltaX, deltaY)
     }
 
     @JavascriptInterface

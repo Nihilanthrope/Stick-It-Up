@@ -1,4 +1,6 @@
-use tauri::{AppHandle, Manager, PhysicalPosition, PhysicalSize, Emitter};
+use std::process::Command;
+
+use tauri::{AppHandle, Emitter, Manager, PhysicalSize};
 
 #[tauri::command]
 fn show_overlay_window(app: AppHandle, note_id: Option<String>) -> Result<(), String> {
@@ -10,6 +12,8 @@ fn show_overlay_window(app: AppHandle, note_id: Option<String>) -> Result<(), St
         if let Some(id) = note_id {
             let _ = overlay_win.emit("set-overlay-note", id);
         }
+        configure_hyprland_overlay();
+        let _ = overlay_win.set_size(PhysicalSize::new(320, 380));
         Ok(())
     } else {
         Err("Overlay window not configured".into())
@@ -40,6 +44,31 @@ fn set_overlay_minimized(app: AppHandle, minimized: bool) -> Result<(), String> 
     } else {
         Err("Overlay window not found".into())
     }
+}
+
+#[tauri::command]
+fn configure_hyprland_overlay() {
+    if std::env::var_os("HYPRLAND_INSTANCE_SIGNATURE").is_none() {
+        return;
+    }
+
+    let selector = "title:^(Stick Up Note \\(Overlay\\))$";
+    let float = format!(
+        "hl.dsp.window.float({{ action = \"set\", window = \"{}\" }})",
+        selector
+    );
+    let pin = format!(
+        "hl.dsp.window.pin({{ action = \"set\", window = \"{}\" }})",
+        selector
+    );
+    let zorder = format!(
+        "hl.dsp.window.alter_zorder({{ mode = \"top\", window = \"{}\" }})",
+        selector
+    );
+
+    let _ = Command::new("hyprctl").args(["dispatch", &float]).output();
+    let _ = Command::new("hyprctl").args(["dispatch", &pin]).output();
+    let _ = Command::new("hyprctl").args(["dispatch", &zorder]).output();
 }
 
 #[tauri::command]

@@ -16,6 +16,7 @@ describe('OverlayController', () => {
       hideOverlay: vi.fn().mockResolvedValue(true),
       setMinimized: vi.fn().mockResolvedValue(true),
       openMainWindow: vi.fn().mockResolvedValue(true),
+      moveOverlay: vi.fn().mockResolvedValue(true),
     };
     controller = new OverlayController(mockBridge);
   });

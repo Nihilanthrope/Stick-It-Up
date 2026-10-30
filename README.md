@@ -120,3 +120,17 @@ All unit tests verify:
 - `src/test/native-bridge.test.ts`: Bridge delegation and safe browser fallback
 - `src/test/overlay-controller.test.ts`: State transitions, show/hide/minimize/restore, and non-destructive close
 - `src/test/overlay-note-sync.test.ts`: Bidirectional note synchronization across overlay and main board
+
+## Native build notes
+
+### Linux / Hyprland
+
+The desktop overlay is a real Tauri 2 window. On Hyprland, the native shell explicitly floats, pins, and raises the `Stick Up Note (Overlay)` window when it opens; this keeps it from being tiled like the main board. Other Linux window managers rely on Tauri's native always-on-top behavior.
+
+Required Arch package for Tauri's GTK WebView backend: `webkit2gtk-4.1`.
+
+### Android
+
+The Android target uses the same React `FloatingOverlayView` inside a native `WindowManager` overlay service. The service requires `SYSTEM_ALERT_WINDOW`, uses a foreground-service notification, and exposes the native bridge for permission, visibility, minimize/restore, app launch, and titlebar movement. The main app and overlay therefore share the same WebView storage and notes model.
+
+The reproducible Android build uses the checked-in Gradle wrapper (`./gradlew assembleDebug`) and the existing Android SDK configured by `android/local.properties`.
