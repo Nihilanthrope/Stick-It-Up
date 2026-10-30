@@ -26,6 +26,16 @@ V2 keeps the V1 note engine and native overlay behavior, then gives the everyday
 
 V1 remains frozen at the `v1.0.0` tag. V2 is published from the current `main` state as `v2.0.0`.
 
+### 📸 Screenshots
+
+**Desktop**
+
+![Stick Up Notes — Desktop](docs/screenshots/desktop-pov.png)
+
+**Mobile**
+
+![Stick Up Notes — Mobile](docs/screenshots/mobile-pov.png)
+
 ---
 
 ## 🚀 Features
