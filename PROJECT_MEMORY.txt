@@ -68,3 +68,11 @@ STICK UP NOTES - PROJECT MEMORY & ARCHITECTURE STATUS
 - Empty Tauri icon placeholders were replaced with valid RGBA PNG icons; invalid .icns/.ico placeholders were removed from bundle configuration.
 - Added @tauri-apps/cli 2.12.4 and an Android Gradle wrapper using Gradle 9.8.2.
 - Verification: 17 Vitest tests pass; TypeScript typecheck and Vite production build pass; Tauri cargo check passes; Tauri release binary and deb/rpm bundles build (AppImage bundling can still require external AppRun/linuxdeploy downloads); Android debug APK builds and was installed successfully to the connected Android 16 device.
+
+8. Requirements audit hardening (2026-10-30)
+- Replaced the original seven-color palette with the requested eight named theme worlds while keeping legacy color IDs readable through aliases.
+- Added mobile-only Canvas/Grid controls and a mobile overlay action so responsive layouts remain usable on narrow screens.
+- Fixed SettingsModal hook ordering so hooks are never conditionally skipped when the modal closes.
+- Added per-note reminder date/time editing and made the Reminders filter functional.
+- Hardened Android overlay selection: the selected note ID is passed through the native service URL into FloatingOverlayView, and overlay show now fails cleanly when overlay permission is unavailable instead of falsely updating UI state.
+- Final verification: 19 Vitest tests pass, TypeScript typecheck passes, Vite production build passes, Android debug APK builds, Tauri cargo check passes, and git diff --check passes. A physical Android device was not connected for the final visual smoke test, so that remains a manual verification item.
