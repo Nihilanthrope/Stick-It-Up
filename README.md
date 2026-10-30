@@ -16,16 +16,21 @@ An aesthetic, offline-first sticky-note board designed in **Cream × Crimson** w
 ## 🚀 Features
 
 1. **Freeform Canvas & Responsive Grid**:
-   - Freeform Drag mode: Freely drag and arrange notes anywhere across the board with live coordinate persistence.
-   - Responsive Grid mode: Organized cards layout optimized for mobile, tablet, or clean overview.
-2. **Rich Note Cards**:
+   - Freeform Drag mode: Freely drag and arrange notes anywhere across the board with live coordinate persistence and auto-arrange to recover off-screen notes.
+   - Responsive Grid mode: Organized cards layout optimized for mobile, tablet, or clean overview (defaults automatically on mobile devices).
+   - Mobile Floating Action Button (FAB): One-tap sticky note creation on touchscreens.
+2. **Rich Note Cards & Productivity**:
    - In-place title & content editing.
-   - Interactive Checklists with checkboxes and strike-through.
+   - Interactive Checklists: Continuous item creation on Enter, progress counters (`x/y done`), and instant checkboxes.
+   - Tags System: Add custom `#tag` chips directly to notes and click any tag to filter the board.
+   - Duplicate Note: One-click note duplication with smart coordinate offset.
+   - Safe Deletion: 2-step deletion confirmation safeguard to prevent accidental taps.
    - Color picker for the eight built-in paper worlds: Cream × Crimson, Ivory × Forest, Midnight × Burgundy, Paper × Ink, Terracotta × Sand, Lavender × Plum, Sage × Espresso, and Cream × Electric Red.
-   - Pin / Unpin, Archive / Restore, and per-note reminder date/time.
-3. **Search & Filters**:
+   - Pin / Unpin, Archive / Restore, and crash-safe per-note reminder date/time scheduling.
+3. **Search, Filters & Backups**:
    - Real-time search across titles, content, checklist items, and tags.
-   - Quick filters: All, Pinned, Checklists, Reminders, Archive.
+   - Quick filters: All, Pinned, Checklists, Reminders, Archive, and Active Tag.
+   - Backup & Restore: Export all notes to JSON or restore from JSON backup directly in Settings.
 
 ---
 
@@ -115,11 +120,14 @@ Run the complete test suite:
 ```bash
 npm run test
 ```
-All unit tests verify:
+All 31 unit tests across 7 test suites verify:
 - `src/test/platform-capabilities.test.ts`: Platform detection (Web, Linux Tauri, Android)
 - `src/test/native-bridge.test.ts`: Bridge delegation and safe browser fallback
 - `src/test/overlay-controller.test.ts`: State transitions, show/hide/minimize/restore, and non-destructive close
 - `src/test/overlay-note-sync.test.ts`: Bidirectional note synchronization across overlay and main board
+- `src/test/notes-store.test.ts`: Notes store mutations, tag management, note duplication, auto-arrange calculations, and JSON export/import
+- `src/test/sticky-note.test.tsx`: Note UI rendering, tag additions, checklist continuous entry, delete safety dialog, and crash-safe reminder parser
+- `src/test/theme.test.ts`: Theme palette definitions and color resolution integrity
 
 ## Native build notes
 

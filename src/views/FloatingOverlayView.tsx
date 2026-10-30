@@ -1,21 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Pin, 
   Plus, 
   Minus, 
-  ExternalLink, 
   X, 
-  CheckSquare, 
   Maximize2, 
   Minimize2, 
   GripHorizontal,
-  LayoutDashboard
+  LayoutDashboard,
+  Palette,
+  Check,
+  Tag,
+  Bell
 } from 'lucide-react';
 import { Note, ChecklistItem } from '../lib/notes/types';
 import { NotesStore, getNotesStore } from '../lib/notes/store';
 import { OverlayNoteSync } from '../lib/overlay/note-sync';
 import { OverlayController, getOverlayController } from '../lib/overlay/controller';
-import { getTheme } from '../lib/theme';
+import { getTheme, NOTE_THEMES } from '../lib/theme';
 import { detectPlatform } from '../lib/platform/capabilities';
 import { getNativeBridge } from '../lib/platform/native-bridge';
 
@@ -36,13 +38,19 @@ export const FloatingOverlayView: React.FC<FloatingOverlayViewProps> = ({
     return store.getOverlayNote(resolvedInitialNoteId || controller.getState().noteId) || null;
   });
 
+  const [allNotes, setAllNotes] = useState<Note[]>(() => store.getNotes());
   const [isMinimized, setIsMinimized] = useState<boolean>(
     controller.getState().minimized
   );
   const [newChecklistText, setNewChecklistText] = useState('');
   const [showAddChecklist, setShowAddChecklist] = useState(false);
-  const newChecklistInputRef = React.useRef<HTMLInputElement>(null);
-  const androidDragRef = React.useRef<{ x: number; y: number } | null>(null);
+  const [showColorPicker, setShowColorPicker] = useState(false);
+  const [showNotePicker, setShowNotePicker] = useState(false);
+
+  const newChecklistInputRef = useRef<HTMLInputElement>(null);
+  const colorPickerRef = useRef<HTMLDivElement>(null);
+  const notePickerRef = useRef<HTMLDivElement>(null);
+  const androidDragRef = useRef<{ x: number; y: number } | null>(null);
   const isAndroidOverlay = detectPlatform() === 'android';
 
   // Sync state with controller and external store changes
@@ -55,7 +63,8 @@ export const FloatingOverlayView: React.FC<FloatingOverlayViewProps> = ({
       }
     });
 
-    const unsubStore = store.subscribe(() => {
+    const unsubStore = store.subscribe((updatedNotes) => {
+      setAllNotes(updatedNotes);
       if (currentNote) {
         const refreshed = store.getNote(currentNote.id);
         if (refreshed) setCurrentNote(refreshed);
@@ -76,6 +85,24 @@ export const FloatingOverlayView: React.FC<FloatingOverlayViewProps> = ({
     };
   }, [currentNote?.id, store, controller, sync]);
 
+  // Click outside listener for color picker & note picker popovers
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
+      if (colorPickerRef.current && !colorPickerRef.current.contains(e.target as Node)) {
+        setShowColorPicker(false);
+      }
+      if (notePickerRef.current && !notePickerRef.current.contains(e.target as Node)) {
+        setShowNotePicker(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, []);
+
   const theme = getTheme(currentNote?.color || 'cream');
 
   const handleUpdate = (patch: Partial<Note>) => {
@@ -94,14 +121,14 @@ export const FloatingOverlayView: React.FC<FloatingOverlayViewProps> = ({
     const text = newChecklistText.trim() || newChecklistInputRef.current?.value.trim() || '';
     if (!text) return;
     const newItem: ChecklistItem = {
-      id: `check-${Date.now()}`,
+      id: `check-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
       text,
       completed: false,
     };
     handleUpdate({ checklist: [...currentNote.checklist, newItem] });
     setNewChecklistText('');
     if (newChecklistInputRef.current) newChecklistInputRef.current.value = '';
-    setShowAddChecklist(false);
+    newChecklistInputRef.current?.focus();
   };
 
   const handleToggleChecklist = (id: string) => {
@@ -112,14 +139,29 @@ export const FloatingOverlayView: React.FC<FloatingOverlayViewProps> = ({
     handleUpdate({ checklist: updated });
   };
 
+  const handleRemoveChecklist = (id: string) => {
+    if (!currentNote) return;
+    const updated = currentNote.checklist.filter((item) => item.id !== id);
+    handleUpdate({ checklist: updated });
+  };
+
   const handleQuickCreate = () => {
     const newNote = store.createOverlayNote({
-      title: 'Quick Sticky',
+      title: 'Quick Sticky 📌',
       content: '',
       color: 'cream',
     });
     controller.show(newNote.id);
     setCurrentNote(newNote);
+  };
+
+  const handleSelectNote = (noteId: string) => {
+    const target = store.getNote(noteId);
+    if (target) {
+      controller.show(target.id);
+      setCurrentNote(target);
+      setShowNotePicker(false);
+    }
   };
 
   const handleClose = () => {
@@ -155,30 +197,6 @@ export const FloatingOverlayView: React.FC<FloatingOverlayViewProps> = ({
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
-  };
-
-  const handleAndroidTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
-    if (!isAndroidOverlay || event.touches.length === 0) return;
-    if ((event.target as HTMLElement).closest('button')) return;
-    const touch = event.touches[0];
-    androidDragRef.current = { x: touch.clientX, y: touch.clientY };
-  };
-
-  const handleAndroidTouchMove = (event: React.TouchEvent<HTMLDivElement>) => {
-    if (!isAndroidOverlay || !androidDragRef.current || event.touches.length === 0) return;
-    if ((event.target as HTMLElement).closest('button')) return;
-    event.preventDefault();
-    const touch = event.touches[0];
-    const previous = androidDragRef.current;
-    const dx = touch.clientX - previous.x;
-    const dy = touch.clientY - previous.y;
-    if (dx === 0 && dy === 0) return;
-    androidDragRef.current = { x: touch.clientX, y: touch.clientY };
-    void getNativeBridge().moveOverlay(dx, dy);
-  };
-
-  const handleAndroidTouchEnd = () => {
-    androidDragRef.current = null;
   };
 
   // If minimized, display compact floating tab/bubble
@@ -234,24 +252,83 @@ export const FloatingOverlayView: React.FC<FloatingOverlayViewProps> = ({
         onPointerMove={handleAndroidDragMove}
         onPointerUp={handleAndroidDragEnd}
         onPointerCancel={handleAndroidDragEnd}
-        onTouchStart={handleAndroidTouchStart}
-        onTouchMove={handleAndroidTouchMove}
-        onTouchEnd={handleAndroidTouchEnd}
-        onTouchCancel={handleAndroidTouchEnd}
         style={{ backgroundColor: theme.tape }}
-        className="flex items-center justify-between px-3 py-1.5 cursor-move border-b border-black/5 touch-none"
+        className="flex items-center justify-between px-3 py-1.5 cursor-move border-b border-black/5 touch-none relative"
       >
-        <div className="flex items-center gap-1.5 text-xs font-semibold">
-          <Pin 
-            className={`w-3.5 h-3.5 ${currentNote?.isPinned ? 'fill-current text-crimson-700' : 'text-stone-500'}`} 
-          />
-          <span className="truncate max-w-[130px]">
-            {currentNote?.title || 'Stick Up Overlay'}
-          </span>
+        {/* Note Switcher Dropdown in Header */}
+        <div className="relative" ref={notePickerRef}>
+          <button
+            onClick={() => setShowNotePicker(!showNotePicker)}
+            className="flex items-center gap-1.5 text-xs font-semibold hover:bg-black/10 px-1.5 py-0.5 rounded transition max-w-[140px]"
+            title="Switch floating note"
+          >
+            <Pin 
+              className={`w-3.5 h-3.5 shrink-0 ${currentNote?.isPinned ? 'fill-current text-crimson-700' : 'text-stone-500'}`} 
+            />
+            <span className="truncate">
+              {currentNote?.title || 'Stick Up Note'}
+            </span>
+          </button>
+
+          {showNotePicker && (
+            <div 
+              className="absolute left-0 top-full mt-1 z-40 bg-white rounded-lg shadow-xl border border-stone-200 py-1 w-48 max-h-56 overflow-y-auto text-xs"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="px-2.5 py-1 text-[10px] font-bold text-stone-400 uppercase tracking-wider">
+                Select Floating Note
+              </div>
+              {allNotes.filter(n => !n.isArchived).map((n) => (
+                <button
+                  key={n.id}
+                  onClick={() => handleSelectNote(n.id)}
+                  className={`w-full text-left px-2.5 py-1.5 hover:bg-stone-100 flex items-center justify-between gap-1 transition ${
+                    n.id === currentNote?.id ? 'bg-crimson-50 text-crimson-800 font-semibold' : 'text-stone-700'
+                  }`}
+                >
+                  <span className="truncate">{n.title || 'Untitled'}</span>
+                  {n.isPinned && <Pin className="w-2.5 h-2.5 fill-current text-crimson-600 shrink-0" />}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Overlay Window Controls */}
         <div className="flex items-center gap-0.5">
+          {/* Color Picker in Overlay */}
+          <div className="relative" ref={colorPickerRef}>
+            <button
+              onClick={() => setShowColorPicker(!showColorPicker)}
+              className="p-1 rounded hover:bg-black/10 transition text-stone-600"
+              title="Change color"
+            >
+              <Palette className="w-3.5 h-3.5" />
+            </button>
+
+            {showColorPicker && (
+              <div 
+                className="absolute right-0 top-full mt-1 z-40 grid grid-cols-4 gap-1 p-1.5 bg-white rounded-lg shadow-xl border border-stone-200 w-36"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {Object.values(NOTE_THEMES).map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => {
+                      handleUpdate({ color: t.id });
+                      setShowColorPicker(false);
+                    }}
+                    style={{ backgroundColor: t.bg, borderColor: t.border }}
+                    className={`w-6 h-6 rounded-full border shadow-xs transition transform hover:scale-110 flex items-center justify-center ${
+                      currentNote?.color === t.id ? 'ring-2 ring-crimson-600 ring-offset-1' : ''
+                    }`}
+                    title={t.name}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+
           <button
             onClick={handleQuickCreate}
             className="p-1 rounded hover:bg-black/10 transition text-stone-600"
@@ -316,16 +393,23 @@ export const FloatingOverlayView: React.FC<FloatingOverlayViewProps> = ({
         {currentNote && currentNote.checklist.length > 0 && (
           <div className="border-t border-black/5 pt-2 space-y-1">
             {currentNote.checklist.map((item) => (
-              <div key={item.id} className="flex items-center gap-1.5 text-xs">
+              <div key={item.id} className="flex items-center gap-1.5 text-xs group/item">
                 <input
                   type="checkbox"
                   checked={item.completed}
                   onChange={() => handleToggleChecklist(item.id)}
-                  className="w-3.5 h-3.5 rounded border-stone-300 text-crimson-600 cursor-pointer"
+                  className="w-3.5 h-3.5 rounded border-stone-300 text-crimson-600 cursor-pointer shrink-0"
                 />
                 <span className={`flex-grow truncate ${item.completed ? 'line-through opacity-50' : ''}`}>
                   {item.text}
                 </span>
+                <button
+                  onClick={() => handleRemoveChecklist(item.id)}
+                  className="opacity-60 hover:opacity-100 hover:text-crimson-600 p-0.5"
+                  title="Remove"
+                >
+                  <X className="w-2.5 h-2.5" />
+                </button>
               </div>
             ))}
           </div>
@@ -343,31 +427,42 @@ export const FloatingOverlayView: React.FC<FloatingOverlayViewProps> = ({
                 if (e.key === 'Enter') handleAddChecklist();
                 if (e.key === 'Escape') setShowAddChecklist(false);
               }}
-              placeholder="New todo..."
+              placeholder="New task... (Enter to add)"
               className="flex-grow px-2 py-0.5 bg-black/5 rounded text-xs focus:outline-none"
               autoFocus
             />
             <button
               onClick={handleAddChecklist}
-              className="p-1 rounded bg-crimson-600 text-white"
+              className="p-1 rounded bg-crimson-600 text-white shrink-0"
             >
               <Plus className="w-3 h-3" />
             </button>
             <button
               onClick={() => setShowAddChecklist(false)}
-              className="p-1 rounded text-stone-500"
+              className="p-1 rounded text-stone-500 shrink-0"
             >
-              <X className="w-3 h-3" />
+              <Check className="w-3 h-3" />
             </button>
           </div>
         ) : (
           <button
             onClick={() => setShowAddChecklist(true)}
-            className="flex items-center gap-1 text-[11px] opacity-60 hover:opacity-100 self-start"
+            className="flex items-center gap-1 text-[11px] opacity-65 hover:opacity-100 self-start"
           >
             <Plus className="w-3 h-3" />
             <span>Add task</span>
           </button>
+        )}
+
+        {/* Tags in Overlay */}
+        {currentNote && currentNote.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1 pt-1 border-t border-black/5">
+            {currentNote.tags.map((t) => (
+              <span key={t} className="px-1.5 py-0.2 rounded text-[9px] bg-black/5 font-medium opacity-80">
+                #{t}
+              </span>
+            ))}
+          </div>
         )}
       </div>
 

@@ -7,6 +7,8 @@ interface GridViewProps {
   onUpdateNote: (id: string, patch: Partial<Note>) => void;
   onDeleteNote: (id: string) => void;
   onFloatOverlay: (id: string) => void;
+  onDuplicateNote?: (id: string) => void;
+  onTagClick?: (tag: string) => void;
 }
 
 export const GridView: React.FC<GridViewProps> = ({
@@ -14,10 +16,12 @@ export const GridView: React.FC<GridViewProps> = ({
   onUpdateNote,
   onDeleteNote,
   onFloatOverlay,
+  onDuplicateNote,
+  onTagClick,
 }) => {
   return (
     <div className="w-full max-w-7xl mx-auto px-3 py-4 sm:p-6">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 justify-items-stretch sm:justify-items-center">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 justify-items-center">
         {notes.map((note) => (
           <StickyNote
             key={note.id}
@@ -26,6 +30,8 @@ export const GridView: React.FC<GridViewProps> = ({
             onUpdate={onUpdateNote}
             onDelete={onDeleteNote}
             onFloatOverlay={onFloatOverlay}
+            onDuplicate={onDuplicateNote}
+            onTagClick={onTagClick}
           />
         ))}
       </div>
@@ -33,7 +39,7 @@ export const GridView: React.FC<GridViewProps> = ({
       {notes.length === 0 && (
         <div className="text-center py-16 text-stone-400">
           <p className="text-base font-medium">No sticky notes found.</p>
-          <p className="text-xs mt-1">Use the "+ New Note" button to add your thoughts.</p>
+          <p className="text-xs mt-1">Tap "+ New Note" in the header to stick up your thoughts.</p>
         </div>
       )}
     </div>
