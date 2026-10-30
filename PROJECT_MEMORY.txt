@@ -1,0 +1,62 @@
+================================================================================
+STICK UP NOTES - PROJECT MEMORY & ARCHITECTURE STATUS
+================================================================================
+
+1. PROJECT SUMMARY
+- Repository: /home/nihilanthrope/github/Stick-Up-Notes
+- Product: Stick Up Notes (Native App)
+- Design: Cream × Crimson default palette with paper sticky-note physical feel.
+- Stack: React 18, TypeScript, Tailwind CSS, Lucide icons, Vitest, Tauri 2 (Desktop Linux), Native Android Overlay (SYSTEM_ALERT_WINDOW).
+
+2. ARCHITECTURAL CONTRACTS IMPLEMENTED
+- Overlay Contract:
+  * src/lib/overlay/types.ts: OverlayState { enabled, visible, noteId, minimized, permission: unknown|granted|denied|unsupported }, OverlayCommand.
+  * src/lib/overlay/controller.ts: State machine managing show, hide, toggle, minimize, restore, close (non-destructive), and requestPermission.
+  * src/lib/overlay/note-sync.ts: Bidirectional broadcast sync via BroadcastChannel and localStorage events.
+- Platform Bridge:
+  * src/lib/platform/capabilities.ts: Detects Web vs Desktop-Linux (Tauri) vs Android with clear capability flags and explanations.
+  * src/lib/platform/native-bridge.ts: Pluggable NativeBridge interface with WebFallbackBridge, TauriDesktopBridge, and AndroidNativeBridge.
+- Notes Store:
+  * src/lib/notes/store.ts: Offline-first localStorage persistence ('stick_up_notes_v1'), getOverlayNote, applyOverlayPatch, createOverlayNote, createNote, updateNote, deleteNote, togglePin, toggleArchive.
+- User Interface:
+  * src/components/Header.tsx: Search, Freeform Canvas vs Responsive Grid view toggle, filter pills, new note, quick overlay toggle, settings.
+  * src/components/StickyNote.tsx: Draggable paper card, header tape, checklists, theme picker, pin, float overlay button, archive, delete.
+  * src/components/FreeformCanvas.tsx: Draggable canvas with coordinate persistence and z-index management.
+  * src/components/GridView.tsx: Responsive masonry/grid layout.
+  * src/components/SettingsModal.tsx: Dedicated Overlay section showing permission status, platform capabilities, browser notice, note selection, and overlay commands.
+  * src/views/FloatingOverlayView.tsx: Dedicated frameless always-on-top window view with draggable header, in-place edit, quick capture (+), minimize to bubble, restore, open main board, and non-destructive close.
+
+3. DESKTOP LINUX LAYER (TAURI 2)
+- Configuration: src-tauri/tauri.conf.json
+  * Window 'main': standard 1100x780 board window.
+  * Window 'overlay': frameless, transparent, always-on-top, 320x380 floating sticky note window.
+- Rust Handlers (src-tauri/src/lib.rs):
+  * show_overlay_window(note_id)
+  * hide_overlay_window()
+  * set_overlay_minimized(minimized)
+  * open_main_window()
+- Arch Linux Verification:
+  * WebKit2GTK 4.1 required for linking GTK3 webview on Arch Linux. If not installed on the system, cargo check reports missing webkit2gtk-4.1.pc. Documented clearly for runtime execution.
+
+4. ANDROID NATIVE LAYER
+- Implementation:
+  * android/app/src/main/AndroidManifest.xml: SYSTEM_ALERT_WINDOW, FOREGROUND_SERVICE permissions.
+  * OverlayPermissionHelper.kt: Checks Settings.canDrawOverlays(context) and builds Settings.ACTION_MANAGE_OVERLAY_PERMISSION intent.
+  * StickUpOverlayService.kt: Android Service utilizing WindowManager with TYPE_APPLICATION_OVERLAY, touch drag listener, full sticky note view, minimized floating bubble, in-place editing, quick capture, and main app launch.
+  * StickUpNativeBridgeInterface.kt: @JavascriptInterface exposing bridge methods to the webview as window.__STICK_UP_ANDROID_BRIDGE__.
+  * MainActivity.kt: Configured with WebView and bridge injection.
+- Verification:
+  * Gradle build configuration created with Android SDK 35 and Kotlin 2.0.
+
+5. NON-DESTRUCTIVE CLOSE VERIFICATION
+- The contract explicitly guarantees that closing/hiding an overlay window NEVER deletes the note. Verified via automated tests in src/test/overlay-controller.test.ts and src/test/overlay-note-sync.test.ts.
+
+6. TEST RESULTS
+- Test Suites: 4 passed (17 tests total)
+  * src/test/overlay-controller.test.ts: 7 passed
+  * src/test/overlay-note-sync.test.ts: 5 passed
+  * src/test/platform-capabilities.test.ts: 3 passed
+  * src/test/native-bridge.test.ts: 2 passed
+- TypeScript: tsc --noEmit passed cleanly (0 errors).
+- Vite Build: Production build generated cleanly in dist/ (195 kB JS bundle, 25 kB CSS).
+================================================================================
