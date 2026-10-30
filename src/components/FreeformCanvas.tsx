@@ -18,6 +18,7 @@ export const FreeformCanvas: React.FC<FreeformCanvasProps> = ({
   onBringToFront,
 }) => {
   const [draggingNoteId, setDraggingNoteId] = useState<string | null>(null);
+  const canvasRef = useRef<HTMLDivElement>(null);
   const dragOffset = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
   const handleDragStart = (e: React.MouseEvent | React.TouchEvent, id: string) => {
@@ -29,9 +30,12 @@ export const FreeformCanvas: React.FC<FreeformCanvasProps> = ({
     const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
     const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
 
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
     dragOffset.current = {
-      x: clientX - note.position.x,
-      y: clientY - note.position.y,
+      x: clientX - rect.left + (canvasRef.current?.scrollLeft || 0) - note.position.x,
+      y: clientY - rect.top + (canvasRef.current?.scrollTop || 0) - note.position.y,
     };
     setDraggingNoteId(id);
   };
@@ -43,8 +47,17 @@ export const FreeformCanvas: React.FC<FreeformCanvasProps> = ({
       const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
       const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
 
-      const newX = Math.max(10, clientX - dragOffset.current.x);
-      const newY = Math.max(10, clientY - dragOffset.current.y);
+      const rect = canvasRef.current?.getBoundingClientRect();
+      if (!rect) return;
+
+      const newX = Math.max(
+        10,
+        clientX - rect.left + (canvasRef.current?.scrollLeft || 0) - dragOffset.current.x,
+      );
+      const newY = Math.max(
+        10,
+        clientY - rect.top + (canvasRef.current?.scrollTop || 0) - dragOffset.current.y,
+      );
 
       onUpdateNote(draggingNoteId, {
         position: { x: Math.round(newX), y: Math.round(newY) },
@@ -69,7 +82,7 @@ export const FreeformCanvas: React.FC<FreeformCanvasProps> = ({
   }, [draggingNoteId, onUpdateNote]);
 
   return (
-    <div className="relative w-full min-h-[calc(100vh-185px)] sm:min-h-[calc(100vh-120px)] bg-paper-grid overflow-auto p-3 sm:p-8">
+    <div ref={canvasRef} className="relative w-full min-h-[calc(100vh-185px)] sm:min-h-[calc(100vh-120px)] bg-paper-grid overflow-auto p-3 sm:p-8">
       {notes.map((note) => (
         <StickyNote
           key={note.id}

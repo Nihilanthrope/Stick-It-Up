@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   X, 
   Layers2, 
@@ -39,6 +39,30 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     overlayState.noteId || (notes[0]?.id || '')
   );
   const [requestingPerm, setRequestingPerm] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const availableNotes = notes.filter((note) => !note.isArchived);
+    const selectedStillExists = availableNotes.some((note) => note.id === selectedNoteId);
+    if (!selectedStillExists) {
+      setSelectedNoteId(overlayState.noteId && availableNotes.some((note) => note.id === overlayState.noteId)
+        ? overlayState.noteId
+        : (availableNotes[0]?.id || ''));
+    }
+  }, [isOpen, notes, overlayState.noteId, selectedNoteId]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const refreshPermission = () => {
+      void overlayController.refreshPermission().catch(() => undefined);
+    };
+    window.addEventListener('focus', refreshPermission);
+    document.addEventListener('visibilitychange', refreshPermission);
+    return () => {
+      window.removeEventListener('focus', refreshPermission);
+      document.removeEventListener('visibilitychange', refreshPermission);
+    };
+  }, [isOpen, overlayController]);
 
   if (!isOpen) return null;
 
@@ -181,7 +205,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               <div className="grid grid-cols-2 gap-2 pt-1">
                 <button
                   onClick={handleToggleOverlay}
-                  className={`flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg shadow-xs transition ${
+                  disabled={!capabilities.supportsNativeOverlay || (!overlayState.visible && !selectedNoteId) || (!overlayState.visible && capabilities.requiresSystemAlertWindow && overlayState.permission !== 'granted')}
+                  className={`flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg shadow-xs transition disabled:opacity-50 disabled:cursor-not-allowed ${
                     overlayState.visible
                       ? 'bg-stone-800 text-cream-50 hover:bg-stone-900'
                       : 'bg-crimson-600 text-cream-50 hover:bg-crimson-700'

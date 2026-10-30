@@ -37,6 +37,7 @@ export const StickyNote: React.FC<StickyNoteProps> = ({
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [newChecklistText, setNewChecklistText] = useState('');
   const [isAddingChecklist, setIsAddingChecklist] = useState(false);
+  const newChecklistInputRef = useRef<HTMLInputElement>(null);
   const noteRef = useRef<HTMLDivElement>(null);
 
   // Subtle natural angle for physical note feel
@@ -65,20 +66,32 @@ export const StickyNote: React.FC<StickyNoteProps> = ({
   };
 
   const handleAddChecklistItem = () => {
-    if (!newChecklistText.trim()) return;
+    const text = newChecklistText.trim() || newChecklistInputRef.current?.value.trim() || '';
+    if (!text) return;
     const newItem: ChecklistItem = {
       id: `check-${Date.now()}`,
-      text: newChecklistText.trim(),
+      text,
       completed: false,
     };
     onUpdate(note.id, { checklist: [...note.checklist, newItem] });
     setNewChecklistText('');
+    if (newChecklistInputRef.current) newChecklistInputRef.current.value = '';
+    setIsAddingChecklist(false);
   };
 
   const handleRemoveChecklistItem = (itemId: string) => {
     const updated = note.checklist.filter((item) => item.id !== itemId);
     onUpdate(note.id, { checklist: updated });
   };
+
+  const reminderInputValue = note.reminder
+    ? (() => {
+        const date = new Date(note.reminder);
+        if (Number.isNaN(date.getTime())) return '';
+        const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+        return local.toISOString().slice(0, 16);
+      })()
+    : '';
 
   return (
     <div
@@ -100,7 +113,7 @@ export const StickyNote: React.FC<StickyNoteProps> = ({
         borderColor: theme.border,
         color: theme.text,
       }}
-      className={`group relative flex flex-col w-full max-w-[300px] min-w-0 min-h-[220px] sm:min-h-[260px] rounded-sm p-4 transition-all duration-200 select-none shadow-paper hover:shadow-paper-hover border ${
+      className={`group relative flex flex-col w-full max-w-[300px] min-w-0 min-h-[220px] sm:min-h-[260px] rounded-sm p-4 transition-all duration-200 shadow-paper hover:shadow-paper-hover border ${
         note.isPinned ? 'ring-2 ring-crimson-600/40' : ''
       }`}
     >
@@ -109,7 +122,7 @@ export const StickyNote: React.FC<StickyNoteProps> = ({
         onMouseDown={(e) => isCanvasMode && onDragStart?.(e, note.id)}
         onTouchStart={(e) => isCanvasMode && onDragStart?.(e, note.id)}
         style={{ backgroundColor: theme.tape }}
-        className={`absolute -top-3 left-1/2 -translate-x-1/2 w-28 h-6 rounded-sm opacity-85 shadow-xs flex items-center justify-center transition-opacity hover:opacity-100 ${
+        className={`absolute -top-3 left-1/2 -translate-x-1/2 w-28 h-6 rounded-sm opacity-85 shadow-xs flex items-center justify-center transition-opacity hover:opacity-100 touch-none ${
           isCanvasMode ? 'cursor-grab active:cursor-grabbing' : ''
         }`}
         title={isCanvasMode ? 'Drag to move note' : ''}
@@ -197,6 +210,7 @@ export const StickyNote: React.FC<StickyNoteProps> = ({
       {isAddingChecklist ? (
         <div className="flex items-center gap-1.5 mt-2 text-xs">
           <input
+            ref={newChecklistInputRef}
             type="text"
             value={newChecklistText}
             onChange={(e) => setNewChecklistText(e.target.value)}
@@ -236,8 +250,8 @@ export const StickyNote: React.FC<StickyNoteProps> = ({
         <Bell className="w-3.5 h-3.5 shrink-0 opacity-70" />
         <input
           type="datetime-local"
-          value={note.reminder ? note.reminder.slice(0, 16) : ''}
-          onChange={(e) => onUpdate(note.id, { reminder: e.target.value ? new Date(e.target.value).toISOString() : null })}
+          value={reminderInputValue}
+          onChange={(e) => onUpdate(note.id, { reminder: e.target.value ? new Date(`${e.target.value}:00`).toISOString() : null })}
           className="min-w-0 flex-1 bg-black/5 rounded px-2 py-1 focus:outline-none"
           aria-label="Reminder date and time"
         />

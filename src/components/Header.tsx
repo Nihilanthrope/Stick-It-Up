@@ -8,6 +8,7 @@ import {
   Settings, 
   Archive, 
   CheckSquare, 
+  Bell,
   Layers2, 
   Sparkles,
   ExternalLink
@@ -229,6 +230,17 @@ export const Header: React.FC<HeaderProps> = ({
         >
           <CheckSquare className="w-3 h-3" />
           Checklists
+        </button>
+        <button
+          onClick={() => onFilterChange('reminders')}
+          className={`px-3 py-1 rounded-full font-medium flex items-center gap-1 transition ${
+            filter === 'reminders'
+              ? 'bg-blue-600 text-cream-50 shadow-sm'
+              : 'bg-cream-200 text-stone-600 hover:bg-cream-300/60'
+          }`}
+        >
+          <Bell className="w-3 h-3" />
+          Reminders
         </button>
         <button
           onClick={() => onFilterChange('archived')}

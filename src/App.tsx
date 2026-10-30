@@ -8,6 +8,7 @@ import { FreeformCanvas } from './components/FreeformCanvas';
 import { GridView } from './components/GridView';
 import { SettingsModal } from './components/SettingsModal';
 import { FloatingOverlayView } from './views/FloatingOverlayView';
+import { getPlatformCapabilities } from './lib/platform/capabilities';
 
 export function App() {
   const store = getNotesStore();
@@ -106,6 +107,21 @@ export function App() {
   };
 
   const handleQuickOverlay = async () => {
+    if (!getPlatformCapabilities().supportsNativeOverlay) {
+      setIsSettingsOpen(true);
+      return;
+    }
+
+    if (!overlayState.visible && !notes.some((note) => !note.isArchived)) {
+      const newNote = store.createOverlayNote({
+        title: 'Quick Sticky',
+        content: '',
+        color: 'cream',
+      });
+      await controller.show(newNote.id);
+      return;
+    }
+
     await controller.toggle();
   };
 

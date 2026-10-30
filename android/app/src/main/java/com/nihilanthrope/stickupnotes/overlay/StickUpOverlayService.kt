@@ -86,6 +86,13 @@ class StickUpOverlayService : Service() {
     private fun hideOverlay() {
         // Non-destructive: hiding the OS window never deletes or mutates a note.
         rootView?.visibility = View.GONE
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            stopForeground(STOP_FOREGROUND_REMOVE)
+        } else {
+            @Suppress("DEPRECATION")
+            stopForeground(true)
+        }
+        stopSelf()
     }
 
     private fun setMinimized(minimized: Boolean) {
@@ -174,8 +181,11 @@ class StickUpOverlayService : Service() {
     fun moveOverlay(deltaX: Int, deltaY: Int): Boolean {
         val view = rootView ?: return false
         val params = layoutParams ?: return false
-        params.x += deltaX
-        params.y += deltaY
+        val metrics = resources.displayMetrics
+        val maxX = (metrics.widthPixels - params.width).coerceAtLeast(0)
+        val maxY = (metrics.heightPixels - params.height).coerceAtLeast(0)
+        params.x = (params.x + deltaX).coerceIn(0, maxX)
+        params.y = (params.y + deltaY).coerceIn(0, maxY)
         return try {
             windowManager.updateViewLayout(view, params)
             true

@@ -72,6 +72,36 @@ describe('OverlayController', () => {
     expect(mockBridge.hideOverlay).toHaveBeenCalled();
   });
 
+  it('does not report hidden when native hide fails', async () => {
+    await controller.show('note-hide-failed');
+    mockBridge.hideOverlay = vi.fn().mockResolvedValue(false);
+
+    const result = await controller.hide();
+
+    expect(result).toBe(false);
+    expect(controller.getState().visible).toBe(true);
+  });
+
+  it('does not report minimized when native minimize fails', async () => {
+    await controller.show('note-minimize-failed');
+    mockBridge.setMinimized = vi.fn().mockResolvedValue(false);
+
+    const result = await controller.minimize();
+
+    expect(result).toBe(false);
+    expect(controller.getState().minimized).toBe(false);
+  });
+
+  it('refreshes permission without opening a permission screen', async () => {
+    mockBridge.getPermission = vi.fn().mockResolvedValue('denied');
+
+    const permission = await controller.refreshPermission();
+
+    expect(permission).toBe('denied');
+    expect(controller.getState().permission).toBe('denied');
+    expect(mockBridge.requestPermission).not.toHaveBeenCalled();
+  });
+
   it('toggles visibility correctly', async () => {
     await controller.toggle('note-1');
     expect(controller.getState().visible).toBe(true);

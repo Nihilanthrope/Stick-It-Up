@@ -41,6 +41,7 @@ export const FloatingOverlayView: React.FC<FloatingOverlayViewProps> = ({
   );
   const [newChecklistText, setNewChecklistText] = useState('');
   const [showAddChecklist, setShowAddChecklist] = useState(false);
+  const newChecklistInputRef = React.useRef<HTMLInputElement>(null);
   const androidDragRef = React.useRef<{ x: number; y: number } | null>(null);
   const isAndroidOverlay = detectPlatform() === 'android';
 
@@ -89,14 +90,18 @@ export const FloatingOverlayView: React.FC<FloatingOverlayViewProps> = ({
   };
 
   const handleAddChecklist = () => {
-    if (!currentNote || !newChecklistText.trim()) return;
+    if (!currentNote) return;
+    const text = newChecklistText.trim() || newChecklistInputRef.current?.value.trim() || '';
+    if (!text) return;
     const newItem: ChecklistItem = {
       id: `check-${Date.now()}`,
-      text: newChecklistText.trim(),
+      text,
       completed: false,
     };
     handleUpdate({ checklist: [...currentNote.checklist, newItem] });
     setNewChecklistText('');
+    if (newChecklistInputRef.current) newChecklistInputRef.current.value = '';
+    setShowAddChecklist(false);
   };
 
   const handleToggleChecklist = (id: string) => {
@@ -152,6 +157,30 @@ export const FloatingOverlayView: React.FC<FloatingOverlayViewProps> = ({
     }
   };
 
+  const handleAndroidTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
+    if (!isAndroidOverlay || event.touches.length === 0) return;
+    if ((event.target as HTMLElement).closest('button')) return;
+    const touch = event.touches[0];
+    androidDragRef.current = { x: touch.clientX, y: touch.clientY };
+  };
+
+  const handleAndroidTouchMove = (event: React.TouchEvent<HTMLDivElement>) => {
+    if (!isAndroidOverlay || !androidDragRef.current || event.touches.length === 0) return;
+    if ((event.target as HTMLElement).closest('button')) return;
+    event.preventDefault();
+    const touch = event.touches[0];
+    const previous = androidDragRef.current;
+    const dx = touch.clientX - previous.x;
+    const dy = touch.clientY - previous.y;
+    if (dx === 0 && dy === 0) return;
+    androidDragRef.current = { x: touch.clientX, y: touch.clientY };
+    void getNativeBridge().moveOverlay(dx, dy);
+  };
+
+  const handleAndroidTouchEnd = () => {
+    androidDragRef.current = null;
+  };
+
   // If minimized, display compact floating tab/bubble
   if (isMinimized) {
     return (
@@ -205,8 +234,12 @@ export const FloatingOverlayView: React.FC<FloatingOverlayViewProps> = ({
         onPointerMove={handleAndroidDragMove}
         onPointerUp={handleAndroidDragEnd}
         onPointerCancel={handleAndroidDragEnd}
+        onTouchStart={handleAndroidTouchStart}
+        onTouchMove={handleAndroidTouchMove}
+        onTouchEnd={handleAndroidTouchEnd}
+        onTouchCancel={handleAndroidTouchEnd}
         style={{ backgroundColor: theme.tape }}
-        className="flex items-center justify-between px-3 py-1.5 cursor-move border-b border-black/5"
+        className="flex items-center justify-between px-3 py-1.5 cursor-move border-b border-black/5 touch-none"
       >
         <div className="flex items-center gap-1.5 text-xs font-semibold">
           <Pin 
@@ -302,6 +335,7 @@ export const FloatingOverlayView: React.FC<FloatingOverlayViewProps> = ({
         {showAddChecklist ? (
           <div className="flex items-center gap-1 pt-1 text-xs">
             <input
+              ref={newChecklistInputRef}
               type="text"
               value={newChecklistText}
               onChange={(e) => setNewChecklistText(e.target.value)}

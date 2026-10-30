@@ -97,6 +97,35 @@ export class NotesStore {
     ];
   }
 
+  private normalizeNote(raw: Partial<Note>, index: number): Note {
+    const now = new Date().toISOString();
+    return {
+      id: typeof raw.id === 'string' && raw.id ? raw.id : `note-${Date.now()}-${index}`,
+      title: typeof raw.title === 'string' ? raw.title : '',
+      content: typeof raw.content === 'string' ? raw.content : '',
+      color: typeof raw.color === 'string' ? raw.color : 'cream',
+      isPinned: Boolean(raw.isPinned),
+      isArchived: Boolean(raw.isArchived),
+      position: raw.position && typeof raw.position.x === 'number' && Number.isFinite(raw.position.x) && typeof raw.position.y === 'number' && Number.isFinite(raw.position.y)
+        ? { x: raw.position.x, y: raw.position.y }
+        : { x: 40 + (index % 6) * 60, y: 40 + (index % 4) * 50 },
+      zIndex: typeof raw.zIndex === 'number' && Number.isFinite(raw.zIndex) ? raw.zIndex : index + 1,
+      checklist: Array.isArray(raw.checklist)
+        ? raw.checklist
+            .filter((item): item is ChecklistItem => Boolean(item && typeof item.id === 'string'))
+            .map((item) => ({
+              id: item.id,
+              text: typeof item.text === 'string' ? item.text : '',
+              completed: Boolean(item.completed),
+            }))
+        : [],
+      reminder: typeof raw.reminder === 'string' && !Number.isNaN(new Date(raw.reminder).getTime()) ? raw.reminder : null,
+      tags: Array.isArray(raw.tags) ? raw.tags.filter((tag): tag is string => typeof tag === 'string') : [],
+      createdAt: typeof raw.createdAt === 'string' ? raw.createdAt : now,
+      updatedAt: typeof raw.updatedAt === 'string' ? raw.updatedAt : now,
+    };
+  }
+
   private load(): Note[] {
     if (typeof localStorage !== 'undefined') {
       try {
@@ -104,7 +133,7 @@ export class NotesStore {
         if (data) {
           const parsed = JSON.parse(data);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            return parsed;
+            return parsed.map((note, index) => this.normalizeNote(note, index));
           }
         }
       } catch (e) {

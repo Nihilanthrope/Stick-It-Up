@@ -101,6 +101,12 @@ export class OverlayController {
     return permission;
   }
 
+  public async refreshPermission(): Promise<OverlayPermission> {
+    const permission = await this.bridge.getPermission();
+    this.updateState({ permission });
+    return permission;
+  }
+
   public async show(noteId?: string): Promise<boolean> {
     const targetNoteId = noteId !== undefined ? noteId : this.state.noteId;
     const success = await this.bridge.showOverlay(targetNoteId);
@@ -119,7 +125,9 @@ export class OverlayController {
 
   public async hide(): Promise<boolean> {
     const success = await this.bridge.hideOverlay();
-    this.updateState({ visible: false });
+    if (success) {
+      this.updateState({ visible: false, minimized: false });
+    }
     return success;
   }
 
@@ -133,13 +141,17 @@ export class OverlayController {
 
   public async minimize(): Promise<boolean> {
     const success = await this.bridge.setMinimized(true);
-    this.updateState({ minimized: true });
+    if (success) {
+      this.updateState({ minimized: true });
+    }
     return success;
   }
 
   public async restore(): Promise<boolean> {
     const success = await this.bridge.setMinimized(false);
-    this.updateState({ minimized: false });
+    if (success) {
+      this.updateState({ minimized: false });
+    }
     return success;
   }
 
