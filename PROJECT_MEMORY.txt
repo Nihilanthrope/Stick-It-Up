@@ -1,0 +1,120 @@
+================================================================================
+STICK UP NOTES - PROJECT MEMORY & ARCHITECTURE STATUS
+================================================================================
+
+1. PROJECT SUMMARY
+- Repository: /home/nihilanthrope/github/Stick-Up-Notes
+- Product: Stick Up Notes (Native App)
+- Design: Cream × Crimson default palette with paper sticky-note physical feel.
+- Stack: React 18, TypeScript, Tailwind CSS, Lucide icons, Vitest, Tauri 2 (Desktop Linux), Native Android Overlay (SYSTEM_ALERT_WINDOW).
+
+2. ARCHITECTURAL CONTRACTS IMPLEMENTED
+- Overlay Contract:
+  * src/lib/overlay/types.ts: OverlayState { enabled, visible, noteId, minimized, permission: unknown|granted|denied|unsupported }, OverlayCommand.
+  * src/lib/overlay/controller.ts: State machine managing show, hide, toggle, minimize, restore, close (non-destructive), and requestPermission.
+  * src/lib/overlay/note-sync.ts: Bidirectional broadcast sync via BroadcastChannel and localStorage events.
+- Platform Bridge:
+  * src/lib/platform/capabilities.ts: Detects Web vs Desktop-Linux (Tauri) vs Android with clear capability flags and explanations.
+  * src/lib/platform/native-bridge.ts: Pluggable NativeBridge interface with WebFallbackBridge, TauriDesktopBridge, and AndroidNativeBridge.
+- Notes Store:
+  * src/lib/notes/store.ts: Offline-first localStorage persistence ('stick_up_notes_v1'), getOverlayNote, applyOverlayPatch, createOverlayNote, createNote, updateNote, deleteNote, togglePin, toggleArchive.
+- User Interface:
+  * src/components/Header.tsx: Search, Freeform Canvas vs Responsive Grid view toggle, filter pills, new note, quick overlay toggle, settings.
+  * src/components/StickyNote.tsx: Draggable paper card, header tape, checklists, theme picker, pin, float overlay button, archive, delete.
+  * src/components/FreeformCanvas.tsx: Draggable canvas with coordinate persistence and z-index management.
+  * src/components/GridView.tsx: Responsive masonry/grid layout.
+  * src/components/SettingsModal.tsx: Dedicated Overlay section showing permission status, platform capabilities, browser notice, note selection, and overlay commands.
+  * src/views/FloatingOverlayView.tsx: Dedicated frameless always-on-top window view with draggable header, in-place edit, quick capture (+), minimize to bubble, restore, open main board, and non-destructive close.
+
+3. DESKTOP LINUX LAYER (TAURI 2)
+- Configuration: src-tauri/tauri.conf.json
+  * Window 'main': standard 1100x780 board window.
+  * Window 'overlay': frameless, transparent, always-on-top, 320x380 floating sticky note window.
+- Rust Handlers (src-tauri/src/lib.rs):
+  * show_overlay_window(note_id)
+  * hide_overlay_window()
+  * set_overlay_minimized(minimized)
+  * open_main_window()
+- Arch Linux Verification:
+  * WebKit2GTK 4.1 required for linking GTK3 webview on Arch Linux. If not installed on the system, cargo check reports missing webkit2gtk-4.1.pc. Documented clearly for runtime execution.
+
+4. ANDROID NATIVE LAYER
+- Implementation:
+  * android/app/src/main/AndroidManifest.xml: SYSTEM_ALERT_WINDOW, FOREGROUND_SERVICE permissions.
+  * OverlayPermissionHelper.kt: Checks Settings.canDrawOverlays(context) and builds Settings.ACTION_MANAGE_OVERLAY_PERMISSION intent.
+  * StickUpOverlayService.kt: Android Service utilizing WindowManager with TYPE_APPLICATION_OVERLAY, touch drag listener, full sticky note view, minimized floating bubble, in-place editing, quick capture, and main app launch.
+  * StickUpNativeBridgeInterface.kt: @JavascriptInterface exposing bridge methods to the webview as window.__STICK_UP_ANDROID_BRIDGE__.
+  * MainActivity.kt: Configured with WebView and bridge injection.
+- Verification:
+  * Gradle build configuration created with Android SDK 35 and Kotlin 2.0.
+
+5. NON-DESTRUCTIVE CLOSE VERIFICATION
+- The contract explicitly guarantees that closing/hiding an overlay window NEVER deletes the note. Verified via automated tests in src/test/overlay-controller.test.ts and src/test/overlay-note-sync.test.ts.
+
+6. TEST RESULTS
+- Test Suites: 4 passed (17 tests total)
+  * src/test/overlay-controller.test.ts: 7 passed
+  * src/test/overlay-note-sync.test.ts: 5 passed
+  * src/test/platform-capabilities.test.ts: 3 passed
+  * src/test/native-bridge.test.ts: 2 passed
+- TypeScript: tsc --noEmit passed cleanly (0 errors).
+- Vite Build: Production build generated cleanly in dist/ (195 kB JS bundle, 25 kB CSS).
+================================================================================
+
+7. Native overlay hardening (2026-10-30)
+- Android overlay was changed from a second native note editor to the shared React FloatingOverlayView inside a WindowManager WebView. This removes the previous synchronization split and keeps localStorage/notes/themes/checklists in one model.
+- Android overlay service is foreground-capable, uses SYSTEM_ALERT_WINDOW, supports minimize/restore/hide, and exposes native titlebar movement through the JS bridge.
+- Linux Tauri overlay now includes a Hyprland-specific runtime integration: when HYPRLAND_INSTANCE_SIGNATURE is present it floats, pins, and raises the overlay by title, then applies the intended 320x380 size.
+- Empty Tauri icon placeholders were replaced with valid RGBA PNG icons; invalid .icns/.ico placeholders were removed from bundle configuration.
+- Added @tauri-apps/cli 2.12.4 and an Android Gradle wrapper using Gradle 9.8.2.
+- Verification: 17 Vitest tests pass; TypeScript typecheck and Vite production build pass; Tauri cargo check passes; Tauri release binary and deb/rpm bundles build (AppImage bundling can still require external AppRun/linuxdeploy downloads); Android debug APK builds and was installed successfully to the connected Android 16 device.
+
+8. Requirements audit hardening (2026-10-30)
+- Replaced the original seven-color palette with the requested eight named theme worlds while keeping legacy color IDs readable through aliases.
+- Added mobile-only Canvas/Grid controls and a mobile overlay action so responsive layouts remain usable on narrow screens.
+- Fixed SettingsModal hook ordering so hooks are never conditionally skipped when the modal closes.
+- Added per-note reminder date/time editing and made the Reminders filter functional.
+- Hardened Android overlay selection: the selected note ID is passed through the native service URL into FloatingOverlayView, and overlay show now fails cleanly when overlay permission is unavailable instead of falsely updating UI state.
+- Final verification: 19 Vitest tests pass, TypeScript typecheck passes, Vite production build passes, Android debug APK builds, Tauri cargo check passes, and git diff --check passes. A physical Android device was not connected for the final visual smoke test, so that remains a manual verification item.
+
+9. Mobile Responsiveness & Full Feature Hardening (2026-10-30)
+- Fixed Mobile CSS Inflation Bug: Removed broad `button { min-height: 40px; min-width: 40px; }` and indiscriminate font-size overrides in src/styles/index.css that distorted icon buttons, color dots, checklist checkboxes, and note headers on touch screens.
+- Fixed Uncaught Reminder RangeError: Guarded datetime-local parsing with safe validation so invalid, cleared, or partial date strings never crash the React render tree.
+- Interactive Tags & Filter: Added full support for `#tag` chips, inline add/remove tag UI in notes, and clickable tag filtering in the header with one-tap dismissal.
+- Duplicate Note Action: Added one-click note duplication with automatic coordinate offsetting.
+- Delete Confirmation Safeguard: Implemented an inline 2-step confirmation dialog with auto-timeout to prevent accidental note loss on mobile devices.
+- Continuous Checklist Creation: Pressing Enter in the checklist input now instantly commits the current task and keeps focus for rapid batch creation; added an 'x/y done' progress indicator and persistent mobile remove buttons.
+- Auto-Arrange Canvas: Added an intelligent 'Auto-arrange notes' feature in FreeformCanvas to organize notes into orderly responsive rows when notes get dragged out of bounds.
+- Mobile-First Defaults & FAB: Initial view mode defaults to 'grid' on viewports < 768px; added a prominent crimson Floating Action Button (+) on mobile for instant note creation.
+- Backup & Customization: Added JSON export, JSON import, sample templates reset, and default paper theme selection in Settings.
+- In-Overlay Quick Switcher: Added color palette selection and note switcher dropdown directly within FloatingOverlayView.
+- Verification: 31 Vitest unit tests pass across 7 test suites, TypeScript typecheck passes (0 errors), Vite production web build succeeds, Android debug APK built and verified installed on physical Android 16 device (CPH2705).
+
+10. Store Reactivity, Freeform Dragging & Live Interaction Fix (2026-10-30)
+- Root Cause Analysis:
+  * In-place mutation bug in NotesStore: `store.updateNote`, `store.createNote`, and `store.duplicateNote` mutated `this.notes` in place and emitted the same array reference. React's `useState` bailed out (`Object.is(prev, next)` was true), preventing re-renders on keystrokes, checklist clicks, and dragging.
+  * Card drag limitation: Only the small 28px tape handle was listening for drag events, and CSS `transition-all 200ms` caused drag positions to lag behind the cursor.
+- Architectural Fixes:
+  * Refactored NotesStore to guarantee immutable state updates (`this.notes.map`, `[newNote, ...this.notes]`), and emit cloned snapshots to all subscribers.
+  * Made checklist items fully editable input rows instead of static text spans.
+  * Allowed dragging across the full note card, header bar, and tape handle (bypassing inputs, textarea, and buttons).
+  * Removed transition latency during canvas mode for snappy, 60fps real-time dragging.
+  * Added canvas double-click note creation to spawn notes directly on the spot at click coordinates.
+  * Defaulted main view to Canvas mode so notes float freely immediately upon launch.
+- Verification: 33 Vitest unit tests pass across 7 test suites, TypeScript passes with 0 errors, Vite build succeeded, and preview server restarted on port 4173.
+
+11. Mobile Usability & Responsiveness Polish (2026-10-30)
+- Separated Touch Scrolling from Touch Dragging:
+  * On mobile touchscreens, touching card bodies now scrolls the canvas or grid smoothly instead of prematurely capturing touch drag with `e.preventDefault()`.
+  * Touch dragging is ergonomically driven by the physical tape handle at the top (`w-32 h-7 touch-none`) or the dedicated header grip icon.
+- Mobile Navigation & Dock:
+  * Redesigned bottom navigation dock with clear touch targets for Cards (Grid), Canvas (Board), Settings, and an elevated center Crimson '+' New Note button.
+  * Eliminated overlapping floating buttons that covered notes.
+  * Added bottom padding (`pb-28`) to main container so the bottom-most notes are never obscured by the mobile dock.
+- Responsive Card Scaling:
+  * Note cards dynamically size to `w-[calc(100vw-32px)] max-w-[340px] sm:w-[300px]`, perfectly fitting 360px-412px smartphone screens with 16px margins on both sides without horizontal clipping.
+- Mobile Header Optimization:
+  * Header cleans up on mobile with a compact brand bar, segmented `Canvas | Grid` view switcher, full-width touch-friendly search bar, and smooth horizontal scrolling filter chips (`-webkit-overflow-scrolling: touch`).
+- Off-Screen Note Auto-Fit:
+  * Canvas automatically fits and auto-arranges off-screen notes on mobile screen load so notes never start hidden beyond the right screen boundary.
+- Removed destructive `font-size: 16px !important` CSS override that was inflating small tags and checklist items.
