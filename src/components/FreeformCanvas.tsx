@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Note } from '../lib/notes/types';
 import { StickyNote } from './StickyNote';
-import { LayoutGrid, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
+import emptyIllustration from '../assets/stickup-empty.svg';
 
 interface FreeformCanvasProps {
   notes: Note[];
@@ -143,9 +144,10 @@ export const FreeformCanvas: React.FC<FreeformCanvasProps> = ({
       ))}
 
       {notes.length === 0 && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-stone-400 select-none p-4 text-center">
-          <p className="text-sm font-medium">No sticky notes match this view.</p>
-          <p className="text-xs mt-1">Tap "+ New Note" in the header to stick one up!</p>
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-stone-400 select-none p-6 text-center">
+          <img src={emptyIllustration} alt="Stack of colorful sticky notes" className="w-56 sm:w-72 max-w-[70vw] mb-5 drop-shadow-sm" />
+          <p className="text-base sm:text-lg font-bold text-stone-700">Nothing stuck here yet.</p>
+          <p className="text-xs sm:text-sm mt-1 max-w-xs leading-relaxed">Double-click the canvas or use New Note to put your first thought on the wall.</p>
         </div>
       )}
     </div>

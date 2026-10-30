@@ -9,7 +9,7 @@ import { GridView } from './components/GridView';
 import { SettingsModal } from './components/SettingsModal';
 import { FloatingOverlayView } from './views/FloatingOverlayView';
 import { getPlatformCapabilities } from './lib/platform/capabilities';
-import { Plus } from 'lucide-react';
+import { Plus, LayoutGrid, Layers, Settings, Pin } from 'lucide-react';
 
 export function App() {
   const store = getNotesStore();
@@ -25,8 +25,15 @@ export function App() {
   const [notes, setNotes] = useState<Note[]>(() => store.getNotes());
   const [overlayState, setOverlayState] = useState<OverlayState>(() => controller.getState());
   
-  // Default to canvas mode so notes float freely and can be dragged anywhere
-  const [viewMode, setViewMode] = useState<'canvas' | 'grid'>('canvas');
+  // Use the organized grid on phones by default; keep canvas as the desktop workspace.
+  const [viewMode, setViewMode] = useState<'canvas' | 'grid'>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('stick_up_view_mode');
+      if (saved === 'canvas' || saved === 'grid') return saved;
+      return window.innerWidth < 768 ? 'grid' : 'canvas';
+    }
+    return 'canvas';
+  });
 
   const [filter, setFilter] = useState<NoteFilter>('all');
   const [activeTag, setActiveTag] = useState<string | null>(null);
@@ -46,6 +53,21 @@ export function App() {
       localStorage.setItem('stick_up_default_color', color);
     }
   };
+
+  // Persist the preferred workspace and keep it responsive when the window changes size.
+  useEffect(() => {
+    localStorage.setItem('stick_up_view_mode', viewMode);
+  }, [viewMode]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768 && viewMode === 'canvas') {
+        setViewMode('grid');
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [viewMode]);
 
   // Subscribe to notes store and overlay controller
   useEffect(() => {
@@ -202,7 +224,7 @@ export function App() {
         archivedCount={archivedCount}
       />
 
-      <main className="flex-grow relative">
+      <main className="flex-grow relative pb-20 md:pb-0">
         {viewMode === 'canvas' ? (
           <FreeformCanvas
             notes={filteredNotes}
@@ -227,14 +249,52 @@ export function App() {
         )}
       </main>
 
+      {/* Mobile workspace dock: keeps the main actions reachable with one thumb. */}
+      <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2 bg-cream-50/95 backdrop-blur-xl border-t border-cream-300/80 shadow-[0_-8px_30px_rgba(64,44,24,0.08)]">
+        <div className="max-w-md mx-auto grid grid-cols-4 gap-1 rounded-2xl bg-cream-200/70 p-1 border border-cream-300/70">
+          <button
+            onClick={() => setViewMode('grid')}
+            className={`flex flex-col items-center gap-0.5 py-2 rounded-xl text-[10px] font-semibold transition ${viewMode === 'grid' ? 'bg-cream-50 text-crimson-700 shadow-sm' : 'text-stone-500'}`}
+            aria-label="Grid view"
+          >
+            <LayoutGrid className="w-4 h-4" />
+            Notes
+          </button>
+          <button
+            onClick={() => setViewMode('canvas')}
+            className={`flex flex-col items-center gap-0.5 py-2 rounded-xl text-[10px] font-semibold transition ${viewMode === 'canvas' ? 'bg-cream-50 text-crimson-700 shadow-sm' : 'text-stone-500'}`}
+            aria-label="Canvas view"
+          >
+            <Layers className="w-4 h-4" />
+            Canvas
+          </button>
+          <button
+            onClick={handleNewNote}
+            className="flex flex-col items-center gap-0.5 py-2 rounded-xl bg-crimson-600 text-cream-50 shadow-sm active:scale-95 transition"
+            aria-label="Create note"
+          >
+            <Plus className="w-4 h-4" />
+            New
+          </button>
+          <button
+            onClick={() => setIsSettingsOpen(true)}
+            className="flex flex-col items-center gap-0.5 py-2 rounded-xl text-[10px] font-semibold text-stone-500 hover:text-stone-800 transition"
+            aria-label="Open settings"
+          >
+            <Settings className="w-4 h-4" />
+            Settings
+          </button>
+        </div>
+      </nav>
+
       {/* Mobile Floating Action Button (FAB) for quick note creation */}
       <button
         onClick={handleNewNote}
-        className="md:hidden fixed bottom-5 right-5 z-30 w-12 h-12 rounded-full bg-crimson-600 hover:bg-crimson-700 active:scale-95 text-cream-50 shadow-lg flex items-center justify-center transition-transform"
+        className="md:hidden fixed bottom-24 right-5 z-30 w-12 h-12 rounded-full bg-crimson-600 hover:bg-crimson-700 active:scale-95 text-cream-50 shadow-lg flex items-center justify-center transition-transform"
         title="Add Sticky Note"
         aria-label="Add Sticky Note"
       >
-        <Plus className="w-6 h-6" />
+        <Pin className="w-5 h-5 fill-current" />
       </button>
 
       <SettingsModal

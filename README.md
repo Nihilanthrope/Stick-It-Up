@@ -13,6 +13,21 @@ An aesthetic, offline-first sticky-note board designed in **Cream × Crimson** w
 
 ---
 
+## ✦ V2 — Responsive Workspace Refresh
+
+V2 keeps the V1 note engine and native overlay behavior, then gives the everyday workspace a cleaner responsive GUI:
+
+- **Mobile-first workspace**: phones default to Grid view instead of squeezing the desktop canvas into a narrow screen.
+- **Thumb-friendly mobile dock**: Notes, Canvas, New, and Settings stay reachable from the bottom edge.
+- **Responsive search/header**: search moves onto its own full-width row on small screens instead of fighting the brand and action buttons.
+- **Visual empty states**: a bundled SVG illustration gives empty boards a proper product UI instead of a blank message.
+- **Remembered workspace**: Canvas/Grid preference is persisted locally and restored on the next launch.
+- **V2 identity**: package metadata and browser title are marked `2.0.0`.
+
+V1 remains frozen at the `v1.0.0` tag. V2 is published from the current `main` state as `v2.0.0`.
+
+---
+
 ## 🚀 Features
 
 1. **Freeform Canvas & Responsive Grid**:
