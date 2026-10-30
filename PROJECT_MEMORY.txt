@@ -118,3 +118,17 @@ STICK UP NOTES - PROJECT MEMORY & ARCHITECTURE STATUS
 - Off-Screen Note Auto-Fit:
   * Canvas automatically fits and auto-arranges off-screen notes on mobile screen load so notes never start hidden beyond the right screen boundary.
 - Removed destructive `font-size: 16px !important` CSS override that was inflating small tags and checklist items.
+
+12. Mobile Header Decluttering & Note Cleaner Layout (2026-10-30)
+- Removed Duplicate Upper Options on Mobile:
+  * Eliminated redundant `[Canvas | Grid]`, `[Settings]`, and `[New Note]` buttons from the top header on mobile screens (`hidden md:flex`).
+  * All main navigation and actions are now centralized in the bottom navigation dock (`Cards`, `Canvas`, center elevated `+`, `Settings`).
+  * Header on mobile is now a single slim, spacious bar with the brand title and quick floating overlay toggle.
+- Cleaned up Sticky Note Clutter:
+  * Removed the empty grey datetime-local input bar that previously appeared on every single note.
+  * Added a dedicated Bell reminder button in the note's bottom toolbar.
+  * Datetime picker now opens on-demand when the user clicks the Bell icon, and displays a compact pill badge only when an active reminder is configured.
+  * Expanded vertical typing space for the note content textarea.
+- Corner Floating Utility Pill:
+  * Converted the full-width "Fit notes to screen" banner into a sleek floating pill pinned in the top-right corner of the canvas.
+- Verification: 33 Vitest tests pass; TypeScript check passes with 0 errors; Web and Android APK builds succeeded; Android APK installed to connected phone (`7D9LJF6P6LLZSKLJ`).
