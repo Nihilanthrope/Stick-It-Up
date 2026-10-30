@@ -12,6 +12,7 @@ interface FreeformCanvasProps {
   onTagClick?: (tag: string) => void;
   onBringToFront: (id: string) => void;
   onAutoArrange?: (width: number) => void;
+  onNewNoteAt?: (pos: { x: number; y: number }) => void;
 }
 
 export const FreeformCanvas: React.FC<FreeformCanvasProps> = ({
@@ -23,6 +24,7 @@ export const FreeformCanvas: React.FC<FreeformCanvasProps> = ({
   onTagClick,
   onBringToFront,
   onAutoArrange,
+  onNewNoteAt,
 }) => {
   const [draggingNoteId, setDraggingNoteId] = useState<string | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -51,6 +53,9 @@ export const FreeformCanvas: React.FC<FreeformCanvasProps> = ({
     if (!draggingNoteId) return;
 
     const handlePointerMove = (e: MouseEvent | TouchEvent) => {
+      if ('touches' in e && e.cancelable) {
+        e.preventDefault();
+      }
       const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
       const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
 
@@ -93,10 +98,20 @@ export const FreeformCanvas: React.FC<FreeformCanvasProps> = ({
     onAutoArrange?.(width);
   };
 
+  const handleCanvasDoubleClick = (e: React.MouseEvent) => {
+    if (e.target !== canvasRef.current) return;
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (!rect || !canvasRef.current) return;
+    const x = Math.max(20, Math.round(e.clientX - rect.left + canvasRef.current.scrollLeft - 140));
+    const y = Math.max(20, Math.round(e.clientY - rect.top + canvasRef.current.scrollTop - 40));
+    onNewNoteAt?.({ x, y });
+  };
+
   return (
     <div
       ref={canvasRef}
-      className="relative w-full min-h-[calc(100vh-140px)] bg-paper-grid overflow-auto p-4 sm:p-8"
+      onDoubleClick={handleCanvasDoubleClick}
+      className="relative w-full min-h-[calc(100vh-140px)] min-w-full bg-paper-grid overflow-auto p-4 sm:p-8 select-none"
     >
       {/* Canvas Utility Bar */}
       {notes.length > 1 && (

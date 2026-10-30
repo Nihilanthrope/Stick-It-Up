@@ -102,6 +102,13 @@ export const StickyNote: React.FC<StickyNoteProps> = ({
     onUpdate(note.id, { checklist: updated });
   };
 
+  const handleUpdateChecklistItem = (itemId: string, text: string) => {
+    const updated = note.checklist.map((item) =>
+      item.id === itemId ? { ...item, text } : item
+    );
+    onUpdate(note.id, { checklist: updated });
+  };
+
   const handleAddChecklistItem = () => {
     const text = newChecklistText.trim() || newChecklistInputRef.current?.value.trim() || '';
     if (!text) return;
@@ -195,6 +202,24 @@ export const StickyNote: React.FC<StickyNoteProps> = ({
     <div
       ref={noteRef}
       onClick={() => onBringToFront?.(note.id)}
+      onMouseDown={(e) => {
+        const target = e.target as HTMLElement;
+        if (target.closest('input, textarea, button, select, [role="button"], a')) {
+          return;
+        }
+        if (isCanvasMode) {
+          onDragStart?.(e, note.id);
+        }
+      }}
+      onTouchStart={(e) => {
+        const target = e.target as HTMLElement;
+        if (target.closest('input, textarea, button, select, [role="button"], a')) {
+          return;
+        }
+        if (isCanvasMode) {
+          onDragStart?.(e, note.id);
+        }
+      }}
       style={{
         ...(isCanvasMode
           ? {
@@ -211,7 +236,9 @@ export const StickyNote: React.FC<StickyNoteProps> = ({
         borderColor: theme.border,
         color: theme.text,
       }}
-      className={`group relative flex flex-col w-full max-w-[340px] sm:max-w-[300px] min-w-0 min-h-[240px] sm:min-h-[260px] rounded-sm p-3.5 sm:p-4 transition-all duration-200 shadow-paper hover:shadow-paper-hover border ${
+      className={`group relative flex flex-col w-full max-w-[340px] sm:max-w-[300px] min-w-0 min-h-[240px] sm:min-h-[260px] rounded-sm p-3.5 sm:p-4 shadow-paper hover:shadow-paper-hover border ${
+        isCanvasMode ? 'cursor-grab active:cursor-grabbing' : ''
+      } ${
         note.isPinned ? 'ring-2 ring-crimson-600/50' : ''
       }`}
     >
@@ -295,13 +322,15 @@ export const StickyNote: React.FC<StickyNoteProps> = ({
                   onChange={() => handleToggleChecklist(item.id)}
                   className="w-4 h-4 rounded border-stone-300 text-crimson-600 focus:ring-crimson-500 cursor-pointer shrink-0"
                 />
-                <span
-                  className={`flex-grow truncate ${
+                <input
+                  type="text"
+                  value={item.text}
+                  onChange={(e) => handleUpdateChecklistItem(item.id, e.target.value)}
+                  className={`flex-grow bg-transparent border-none p-0 focus:outline-none focus:ring-0 text-xs font-sans min-w-0 ${
                     item.completed ? 'line-through opacity-50' : ''
                   }`}
-                >
-                  {item.text}
-                </span>
+                  style={{ color: theme.text }}
+                />
                 <button
                   onClick={() => handleRemoveChecklistItem(item.id)}
                   className="opacity-70 sm:opacity-0 sm:group-hover/item:opacity-100 p-1 hover:text-crimson-600 transition shrink-0"

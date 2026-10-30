@@ -25,13 +25,8 @@ export function App() {
   const [notes, setNotes] = useState<Note[]>(() => store.getNotes());
   const [overlayState, setOverlayState] = useState<OverlayState>(() => controller.getState());
   
-  // Default to grid on mobile screens (< 768px) for effortless responsive reading
-  const [viewMode, setViewMode] = useState<'canvas' | 'grid'>(() => {
-    if (typeof window !== 'undefined' && window.innerWidth < 768) {
-      return 'grid';
-    }
-    return 'canvas';
-  });
+  // Default to canvas mode so notes float freely and can be dragged anywhere
+  const [viewMode, setViewMode] = useState<'canvas' | 'grid'>('canvas');
 
   const [filter, setFilter] = useState<NoteFilter>('all');
   const [activeTag, setActiveTag] = useState<string | null>(null);
@@ -55,7 +50,7 @@ export function App() {
   // Subscribe to notes store and overlay controller
   useEffect(() => {
     const unsubStore = store.subscribe((updatedNotes) => {
-      setNotes(updatedNotes);
+      setNotes([...updatedNotes]);
     });
 
     const unsubController = controller.subscribe((state) => {
@@ -112,6 +107,10 @@ export function App() {
   }, [notes, filter, activeTag, searchQuery]);
 
   const handleNewNote = () => {
+    handleNewNoteAt();
+  };
+
+  const handleNewNoteAt = (position?: { x: number; y: number }) => {
     // If viewing archive or tag, switch back to 'all' so new note is visible!
     if (filter === 'archived') {
       setFilter('all');
@@ -122,6 +121,7 @@ export function App() {
       title: 'New Thought 📌',
       content: '',
       color: defaultColor,
+      ...(position ? { position } : {}),
     });
     store.bringToFront(newNote.id);
   };
@@ -213,6 +213,7 @@ export function App() {
             onTagClick={(t) => setActiveTag(t)}
             onBringToFront={handleBringToFront}
             onAutoArrange={handleAutoArrange}
+            onNewNoteAt={handleNewNoteAt}
           />
         ) : (
           <GridView

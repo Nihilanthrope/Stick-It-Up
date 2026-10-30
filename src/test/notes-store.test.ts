@@ -114,4 +114,21 @@ describe('NotesStore', () => {
     expect(arranged[0].position.y).toBeGreaterThanOrEqual(20);
     store.destroy();
   });
+
+  it('notifies subscribers with new array references on updates', () => {
+    const store = new NotesStore();
+    const snapshots: Array<readonly unknown[]> = [];
+    const unsub = store.subscribe((notes) => {
+      snapshots.push(notes);
+    });
+
+    const note = store.createNote({ title: 'Reactive note' });
+    store.updateNote(note.id, { title: 'Updated reactive note' });
+
+    expect(snapshots.length).toBeGreaterThanOrEqual(3);
+    // Crucial for React useState: each snapshot must be a distinct array reference
+    expect(snapshots[1]).not.toBe(snapshots[2]);
+    unsub();
+    store.destroy();
+  });
 });

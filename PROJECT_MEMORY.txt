@@ -89,3 +89,16 @@ STICK UP NOTES - PROJECT MEMORY & ARCHITECTURE STATUS
 - Backup & Customization: Added JSON export, JSON import, sample templates reset, and default paper theme selection in Settings.
 - In-Overlay Quick Switcher: Added color palette selection and note switcher dropdown directly within FloatingOverlayView.
 - Verification: 31 Vitest unit tests pass across 7 test suites, TypeScript typecheck passes (0 errors), Vite production web build succeeds, Android debug APK built and verified installed on physical Android 16 device (CPH2705).
+
+10. Store Reactivity, Freeform Dragging & Live Interaction Fix (2026-10-30)
+- Root Cause Analysis:
+  * In-place mutation bug in NotesStore: `store.updateNote`, `store.createNote`, and `store.duplicateNote` mutated `this.notes` in place and emitted the same array reference. React's `useState` bailed out (`Object.is(prev, next)` was true), preventing re-renders on keystrokes, checklist clicks, and dragging.
+  * Card drag limitation: Only the small 28px tape handle was listening for drag events, and CSS `transition-all 200ms` caused drag positions to lag behind the cursor.
+- Architectural Fixes:
+  * Refactored NotesStore to guarantee immutable state updates (`this.notes.map`, `[newNote, ...this.notes]`), and emit cloned snapshots to all subscribers.
+  * Made checklist items fully editable input rows instead of static text spans.
+  * Allowed dragging across the full note card, header bar, and tape handle (bypassing inputs, textarea, and buttons).
+  * Removed transition latency during canvas mode for snappy, 60fps real-time dragging.
+  * Added canvas double-click note creation to spawn notes directly on the spot at click coordinates.
+  * Defaulted main view to Canvas mode so notes float freely immediately upon launch.
+- Verification: 33 Vitest unit tests pass across 7 test suites, TypeScript passes with 0 errors, Vite build succeeded, and preview server restarted on port 4173.

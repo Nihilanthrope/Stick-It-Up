@@ -170,8 +170,9 @@ export class NotesStore {
   }
 
   private notify(persistState = true): void {
+    const snapshot = [...this.notes];
     for (const listener of this.listeners) {
-      listener(this.notes);
+      listener(snapshot);
     }
   }
 
@@ -218,7 +219,7 @@ export class NotesStore {
       updatedAt: now,
     };
 
-    this.notes.unshift(newNote);
+    this.notes = [newNote, ...this.notes];
     this.persist();
     return newNote;
   }
@@ -244,7 +245,7 @@ export class NotesStore {
       updatedAt: new Date().toISOString(),
     };
 
-    this.notes[index] = updated;
+    this.notes = this.notes.map((n, i) => (i === index ? updated : n));
     this.persist();
     return updated;
   }
@@ -274,7 +275,7 @@ export class NotesStore {
       updatedAt: now,
     };
 
-    this.notes.unshift(duplicated);
+    this.notes = [duplicated, ...this.notes];
     this.persist();
     return duplicated;
   }
@@ -410,7 +411,7 @@ export class NotesStore {
 
   public subscribe(listener: (notes: Note[]) => void): () => void {
     this.listeners.add(listener);
-    listener(this.notes);
+    listener([...this.notes]);
     return () => {
       this.listeners.delete(listener);
     };

@@ -64,10 +64,10 @@ export const FloatingOverlayView: React.FC<FloatingOverlayViewProps> = ({
     });
 
     const unsubStore = store.subscribe((updatedNotes) => {
-      setAllNotes(updatedNotes);
+      setAllNotes([...updatedNotes]);
       if (currentNote) {
         const refreshed = store.getNote(currentNote.id);
-        if (refreshed) setCurrentNote(refreshed);
+        if (refreshed) setCurrentNote({ ...refreshed });
       }
     });
 
@@ -400,9 +400,20 @@ export const FloatingOverlayView: React.FC<FloatingOverlayViewProps> = ({
                   onChange={() => handleToggleChecklist(item.id)}
                   className="w-3.5 h-3.5 rounded border-stone-300 text-crimson-600 cursor-pointer shrink-0"
                 />
-                <span className={`flex-grow truncate ${item.completed ? 'line-through opacity-50' : ''}`}>
-                  {item.text}
-                </span>
+                <input
+                  type="text"
+                  value={item.text}
+                  onChange={(e) => {
+                    const updated = currentNote.checklist.map((c) =>
+                      c.id === item.id ? { ...c, text: e.target.value } : c
+                    );
+                    handleUpdate({ checklist: updated });
+                  }}
+                  className={`flex-grow bg-transparent border-none p-0 focus:outline-none focus:ring-0 text-xs font-sans min-w-0 ${
+                    item.completed ? 'line-through opacity-50' : ''
+                  }`}
+                  style={{ color: theme.text }}
+                />
                 <button
                   onClick={() => handleRemoveChecklist(item.id)}
                   className="opacity-60 hover:opacity-100 hover:text-crimson-600 p-0.5"

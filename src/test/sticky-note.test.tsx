@@ -40,8 +40,8 @@ describe('StickyNote Component', () => {
 
     expect(screen.getByDisplayValue('Test Sticky Note')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Some thoughts here')).toBeInTheDocument();
-    expect(screen.getByText('First task')).toBeInTheDocument();
-    expect(screen.getByText('Second task')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('First task')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Second task')).toBeInTheDocument();
     expect(screen.getByText('#design')).toBeInTheDocument();
     expect(screen.getByText('#v1')).toBeInTheDocument();
   });
@@ -84,5 +84,34 @@ describe('StickyNote Component', () => {
     expect(() => {
       fireEvent.change(reminderInput, { target: { value: 'invalid-date' } });
     }).not.toThrow();
+  });
+
+  it('updates title, content, and checklist text when user types', () => {
+    const onUpdate = vi.fn();
+    render(
+      <StickyNote
+        note={mockNote}
+        onUpdate={onUpdate}
+        onDelete={vi.fn()}
+        onFloatOverlay={vi.fn()}
+      />
+    );
+
+    const titleInput = screen.getByDisplayValue('Test Sticky Note');
+    fireEvent.change(titleInput, { target: { value: 'My Brand New Title' } });
+    expect(onUpdate).toHaveBeenCalledWith('note-test-1', { title: 'My Brand New Title' });
+
+    const contentInput = screen.getByDisplayValue('Some thoughts here');
+    fireEvent.change(contentInput, { target: { value: 'Updated body text' } });
+    expect(onUpdate).toHaveBeenCalledWith('note-test-1', { content: 'Updated body text' });
+
+    const firstTaskInput = screen.getByDisplayValue('First task');
+    fireEvent.change(firstTaskInput, { target: { value: 'Renamed task 1' } });
+    expect(onUpdate).toHaveBeenCalledWith('note-test-1', {
+      checklist: [
+        { id: 'c1', text: 'Renamed task 1', completed: false },
+        { id: 'c2', text: 'Second task', completed: true },
+      ],
+    });
   });
 });

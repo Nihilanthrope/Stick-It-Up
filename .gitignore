@@ -36,3 +36,5 @@ lerna-debug.log*
 *.sln
 *.sw?
 src-tauri/gen
+
+PROJECT_MEMORY.txt
