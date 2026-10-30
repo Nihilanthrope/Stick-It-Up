@@ -39,6 +39,17 @@ describe('OverlayController', () => {
     expect(mockBridge.showOverlay).toHaveBeenCalledWith('note-abc');
   });
 
+  it('does not mark overlay visible when the native show operation fails', async () => {
+    mockBridge.showOverlay = vi.fn().mockResolvedValue(false);
+
+    const result = await controller.show('note-failed');
+
+    expect(result).toBe(false);
+    expect(controller.getState().visible).toBe(false);
+    expect(controller.getState().enabled).toBe(false);
+    expect(controller.getState().noteId).toBeNull();
+  });
+
   it('minimizes and restores overlay state', async () => {
     await controller.show('note-abc');
     await controller.minimize();

@@ -8,6 +8,7 @@ import {
   Layers2, 
   Plus, 
   X,
+  Bell,
   GripHorizontal
 } from 'lucide-react';
 import { Note, ChecklistItem } from '../lib/notes/types';
@@ -229,6 +230,27 @@ export const StickyNote: React.FC<StickyNoteProps> = ({
           <span>Add checklist item</span>
         </button>
       )}
+
+      {/* Reminder */}
+      <div className="flex items-center gap-2 mt-2 text-[11px]">
+        <Bell className="w-3.5 h-3.5 shrink-0 opacity-70" />
+        <input
+          type="datetime-local"
+          value={note.reminder ? note.reminder.slice(0, 16) : ''}
+          onChange={(e) => onUpdate(note.id, { reminder: e.target.value ? new Date(e.target.value).toISOString() : null })}
+          className="min-w-0 flex-1 bg-black/5 rounded px-2 py-1 focus:outline-none"
+          aria-label="Reminder date and time"
+        />
+        {note.reminder && (
+          <button
+            onClick={() => onUpdate(note.id, { reminder: null })}
+            className="p-1 rounded hover:bg-black/5"
+            title="Clear reminder"
+          >
+            <X className="w-3 h-3" />
+          </button>
+        )}
+      </div>
 
       {/* Bottom Footer Toolbar */}
       <div className="flex items-center justify-between mt-3 pt-2 border-t border-black/5 text-stone-500 text-xs">

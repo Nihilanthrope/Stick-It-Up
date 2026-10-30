@@ -6,12 +6,13 @@ export interface ChecklistItem {
 
 export type NoteColor =
   | 'cream'
-  | 'yellow'
-  | 'mint'
+  | 'forest'
+  | 'midnight'
+  | 'paper'
+  | 'terracotta'
   | 'lavender'
-  | 'pink'
-  | 'sky'
-  | 'velvet';
+  | 'sage'
+  | 'electric-red';
 
 export interface Note {
   id: string;

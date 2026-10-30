@@ -62,7 +62,7 @@ class StickUpOverlayService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action ?: ACTION_SHOW) {
-            ACTION_SHOW -> showOverlay()
+            ACTION_SHOW -> showOverlay(intent?.getStringExtra(EXTRA_NOTE_ID))
             ACTION_HIDE -> hideOverlay()
             ACTION_MINIMIZE -> setMinimized(true)
             ACTION_RESTORE -> setMinimized(false)
@@ -70,13 +70,16 @@ class StickUpOverlayService : Service() {
         return START_STICKY
     }
 
-    private fun showOverlay() {
+    private fun showOverlay(noteId: String?) {
         if (!Settings.canDrawOverlays(this)) return
 
         if (rootView == null) {
-            createOverlayWindow()
+            createOverlayWindow(noteId)
         } else {
             rootView?.visibility = View.VISIBLE
+            if (noteId != null) {
+                webView?.loadUrl("https://appassets.androidplatform.net/dist/index.html?mode=overlay&noteId=${android.net.Uri.encode(noteId)}")
+            }
         }
     }
 
@@ -98,7 +101,7 @@ class StickUpOverlayService : Service() {
         }
     }
 
-    private fun createOverlayWindow() {
+    private fun createOverlayWindow(noteId: String?) {
         val windowType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
         } else {
@@ -140,7 +143,12 @@ class StickUpOverlayService : Service() {
                 }
             }
             addJavascriptInterface(StickUpNativeBridgeInterface(this@StickUpOverlayService), "__STICK_UP_ANDROID_BRIDGE__")
-            loadUrl("https://appassets.androidplatform.net/dist/index.html?mode=overlay")
+            val encodedNoteId = noteId?.let { android.net.Uri.encode(it) }
+            val overlayUrl = buildString {
+                append("https://appassets.androidplatform.net/dist/index.html?mode=overlay")
+                if (!encodedNoteId.isNullOrEmpty()) append("&noteId=").append(encodedNoteId)
+            }
+            loadUrl(overlayUrl)
         }
 
         frame.addView(

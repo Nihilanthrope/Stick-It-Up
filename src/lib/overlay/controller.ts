@@ -105,12 +105,14 @@ export class OverlayController {
     const targetNoteId = noteId !== undefined ? noteId : this.state.noteId;
     const success = await this.bridge.showOverlay(targetNoteId);
 
-    this.updateState({
-      enabled: true,
-      visible: true,
-      noteId: targetNoteId,
-      minimized: false,
-    });
+    if (success) {
+      this.updateState({
+        enabled: true,
+        visible: true,
+        noteId: targetNoteId,
+        minimized: false,
+      });
+    }
 
     return success;
   }

@@ -21,11 +21,11 @@ An aesthetic, offline-first sticky-note board designed in **Cream × Crimson** w
 2. **Rich Note Cards**:
    - In-place title & content editing.
    - Interactive Checklists with checkboxes and strike-through.
-   - Color picker for paper themes.
-   - Pin / Unpin and Archive / Restore.
+   - Color picker for the eight built-in paper worlds: Cream × Crimson, Ivory × Forest, Midnight × Burgundy, Paper × Ink, Terracotta × Sand, Lavender × Plum, Sage × Espresso, and Cream × Electric Red.
+   - Pin / Unpin, Archive / Restore, and per-note reminder date/time.
 3. **Search & Filters**:
    - Real-time search across titles, content, checklist items, and tags.
-   - Quick filters: All, Pinned, Checklists, Archive.
+   - Quick filters: All, Pinned, Checklists, Reminders, Archive.
 
 ---
 

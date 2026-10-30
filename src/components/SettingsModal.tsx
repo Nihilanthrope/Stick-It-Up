@@ -34,13 +34,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   overlayState,
   overlayController,
 }) => {
-  if (!isOpen) return null;
-
   const capabilities = getPlatformCapabilities();
   const [selectedNoteId, setSelectedNoteId] = useState<string>(
     overlayState.noteId || (notes[0]?.id || '')
   );
   const [requestingPerm, setRequestingPerm] = useState(false);
+
+  if (!isOpen) return null;
 
   const handleToggleOverlay = async () => {
     if (overlayState.visible) {

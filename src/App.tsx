@@ -61,6 +61,7 @@ export function App() {
       // Specific view filter
       if (filter === 'pinned' && !note.isPinned) return false;
       if (filter === 'checklists' && (!note.checklist || note.checklist.length === 0)) return false;
+      if (filter === 'reminders' && !note.reminder) return false;
 
       // Search query
       if (searchQuery.trim()) {

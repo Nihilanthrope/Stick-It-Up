@@ -31,6 +31,9 @@ class StickUpNativeBridgeInterface(private val context: Context) {
 
     @JavascriptInterface
     fun showOverlay(noteId: String?): Boolean {
+        if (!OverlayPermissionHelper.canDrawOverlays(context)) {
+            return false
+        }
         val intent = Intent(context, StickUpOverlayService::class.java).apply {
             action = StickUpOverlayService.ACTION_SHOW
             putExtra(StickUpOverlayService.EXTRA_NOTE_ID, noteId)

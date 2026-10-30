@@ -28,10 +28,12 @@ export const FloatingOverlayView: React.FC<FloatingOverlayViewProps> = ({
 }) => {
   const store = getNotesStore();
   const controller = getOverlayController();
+  const urlNoteId = new URLSearchParams(window.location.search).get('noteId');
+  const resolvedInitialNoteId = initialNoteId || urlNoteId;
   const [sync] = useState(() => new OverlayNoteSync(store));
 
   const [currentNote, setCurrentNote] = useState<Note | null>(() => {
-    return store.getOverlayNote(initialNoteId || controller.getState().noteId) || null;
+    return store.getOverlayNote(resolvedInitialNoteId || controller.getState().noteId) || null;
   });
 
   const [isMinimized, setIsMinimized] = useState<boolean>(

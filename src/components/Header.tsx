@@ -62,7 +62,18 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* Mobile Actions */}
-          <div className="flex items-center gap-1 md:hidden">
+          <div className="flex items-center gap-1 md:hidden shrink-0">
+            <button
+              onClick={onQuickOverlay}
+              className={`p-2 rounded-lg border ${
+                overlayActive
+                  ? 'bg-crimson-100 text-crimson-700 border-crimson-200'
+                  : 'text-stone-600 border-transparent hover:bg-cream-200'
+              }`}
+              title="Toggle Floating Overlay"
+            >
+              <Layers2 className="w-5 h-5" />
+            </button>
             <button
               onClick={onNewNote}
               className="p-2 rounded-lg bg-crimson-600 text-cream-50 hover:bg-crimson-700 shadow-sm"
@@ -157,6 +168,32 @@ export const Header: React.FC<HeaderProps> = ({
             <span>New Note</span>
           </button>
         </div>
+      </div>
+
+      {/* Mobile View Mode */}
+      <div className="md:hidden max-w-7xl mx-auto grid grid-cols-2 gap-1.5 pt-2">
+        <button
+          onClick={() => onViewModeChange('canvas')}
+          className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold border transition ${
+            viewMode === 'canvas'
+              ? 'bg-cream-50 text-crimson-700 border-crimson-200 shadow-sm'
+              : 'bg-cream-200 text-stone-600 border-transparent'
+          }`}
+        >
+          <Layers className="w-3.5 h-3.5" />
+          Canvas
+        </button>
+        <button
+          onClick={() => onViewModeChange('grid')}
+          className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold border transition ${
+            viewMode === 'grid'
+              ? 'bg-cream-50 text-crimson-700 border-crimson-200 shadow-sm'
+              : 'bg-cream-200 text-stone-600 border-transparent'
+          }`}
+        >
+          <LayoutGrid className="w-3.5 h-3.5" />
+          Grid
+        </button>
       </div>
 
       {/* Filter Chips Bar */}
