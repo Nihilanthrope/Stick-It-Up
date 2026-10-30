@@ -14,6 +14,7 @@ import {
   Tag
 } from 'lucide-react';
 import { NoteFilter } from '../lib/notes/types';
+import logo from '../assets/stickup-logo.svg';
 
 interface HeaderProps {
   searchQuery: string;
@@ -61,8 +62,8 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="flex items-center justify-between gap-2">
           {/* Brand */}
           <div className="flex items-center gap-2 min-w-0 shrink-0">
-            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-crimson-600 text-cream-50 flex items-center justify-center shadow-md rotate-[-4deg] transition-transform hover:rotate-0 shrink-0">
-              <Pin className="w-4 h-4 sm:w-5 sm:h-5 fill-current" />
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl overflow-hidden shadow-md rotate-[-4deg] transition-transform hover:rotate-0 shrink-0 bg-white">
+              <img src={logo} alt="Stick Up Notes" className="w-full h-full object-cover" draggable={false} />
             </div>
             <div>
               <h1 className="text-sm sm:text-lg font-bold tracking-tight text-stone-900 flex items-center gap-1 font-sans">
