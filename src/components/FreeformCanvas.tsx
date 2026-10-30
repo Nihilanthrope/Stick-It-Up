@@ -69,7 +69,7 @@ export const FreeformCanvas: React.FC<FreeformCanvasProps> = ({
   }, [draggingNoteId, onUpdateNote]);
 
   return (
-    <div className="relative w-full min-h-[calc(100vh-120px)] bg-paper-grid overflow-auto p-8">
+    <div className="relative w-full min-h-[calc(100vh-185px)] sm:min-h-[calc(100vh-120px)] bg-paper-grid overflow-auto p-3 sm:p-8">
       {notes.map((note) => (
         <StickyNote
           key={note.id}

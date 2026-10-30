@@ -27,3 +27,35 @@
 button, input, textarea {
   -webkit-app-region: no-drag;
 }
+
+
+/* Responsive/mobile hardening */
+html, body, #root {
+  width: 100%;
+  min-width: 0;
+}
+
+* { box-sizing: border-box; }
+
+@media (max-width: 767px) {
+  body {
+    -webkit-text-size-adjust: 100%;
+    overscroll-behavior-x: none;
+  }
+
+  input, textarea, button {
+    font-size: 16px;
+  }
+
+  button {
+    min-height: 40px;
+    min-width: 40px;
+  }
+
+  [data-tauri-drag-region] {
+    -webkit-app-region: no-drag;
+  }
+}
+
+.no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }

@@ -42,22 +42,22 @@ export const Header: React.FC<HeaderProps> = ({
   totalNotes,
 }) => {
   return (
-    <header className="sticky top-0 z-40 bg-[#FAF7F2]/90 backdrop-blur-md border-b border-cream-300/80 px-4 py-3 sm:px-6 shadow-sm">
-      <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
+    <header className="sticky top-0 z-40 bg-[#FAF7F2]/95 backdrop-blur-md border-b border-cream-300/80 px-3 py-2.5 sm:px-6 sm:py-3 shadow-sm">
+      <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2.5 sm:gap-3">
         {/* Brand identity: Cream × Crimson */}
         <div className="flex items-center justify-between w-full md:w-auto">
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2 min-w-0">
             <div className="w-9 h-9 rounded-lg bg-crimson-600 text-cream-50 flex items-center justify-center shadow-md rotate-[-4deg] transition-transform hover:rotate-0">
               <Pin className="w-5 h-5 fill-current" />
             </div>
             <div>
-              <h1 className="text-xl font-bold tracking-tight text-stone-900 flex items-center gap-1.5 font-sans">
+              <h1 className="text-lg sm:text-xl font-bold tracking-tight text-stone-900 flex items-center gap-1.5 font-sans">
                 Stick Up Notes
                 <span className="text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded bg-crimson-100 text-crimson-700 tracking-wider">
                   Native
                 </span>
               </h1>
-              <p className="text-xs text-stone-500 font-medium">Cream × Crimson sticky-note board</p>
+              <p className="hidden xs:block text-xs text-stone-500 font-medium">Cream × Crimson sticky-note board</p>
             </div>
           </div>
 
@@ -88,7 +88,7 @@ export const Header: React.FC<HeaderProps> = ({
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder="Search notes, checklists, tags..."
-            className="w-full pl-9 pr-4 py-1.5 text-sm bg-cream-50 border border-cream-300 rounded-full focus:outline-none focus:ring-2 focus:ring-crimson-500/40 focus:border-crimson-600 transition placeholder:text-stone-400 text-stone-800 shadow-inner"
+            className="w-full pl-9 pr-4 py-2 sm:py-1.5 text-sm bg-cream-50 border border-cream-300 rounded-full focus:outline-none focus:ring-2 focus:ring-crimson-500/40 focus:border-crimson-600 transition placeholder:text-stone-400 text-stone-800 shadow-inner"
           />
         </div>
 
@@ -160,7 +160,7 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       {/* Filter Chips Bar */}
-      <div className="max-w-7xl mx-auto flex items-center gap-1.5 pt-2.5 overflow-x-auto no-scrollbar text-xs">
+      <div className="max-w-7xl mx-auto flex items-center gap-1.5 pt-2 overflow-x-auto no-scrollbar text-xs pb-0.5">
         <button
           onClick={() => onFilterChange('all')}
           className={`px-3 py-1 rounded-full font-medium transition ${

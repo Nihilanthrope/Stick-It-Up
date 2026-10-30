@@ -99,7 +99,7 @@ export const StickyNote: React.FC<StickyNoteProps> = ({
         borderColor: theme.border,
         color: theme.text,
       }}
-      className={`group relative flex flex-col w-[300px] min-h-[260px] rounded-sm p-4 transition-all duration-200 select-none shadow-paper hover:shadow-paper-hover border ${
+      className={`group relative flex flex-col w-full max-w-[300px] min-w-0 min-h-[220px] sm:min-h-[260px] rounded-sm p-4 transition-all duration-200 select-none shadow-paper hover:shadow-paper-hover border ${
         note.isPinned ? 'ring-2 ring-crimson-600/40' : ''
       }`}
     >
