@@ -5,14 +5,22 @@ export interface ChecklistItem {
 }
 
 export type NoteColor =
+  | 'yellow'
   | 'cream'
+  | 'mint'
+  | 'blue'
+  | 'pink'
+  | 'lavender'
+  | 'peach'
+  | 'matcha'
+  | 'kraft'
+  | 'dark'
+  | 'electric-red'
   | 'forest'
   | 'midnight'
   | 'paper'
   | 'terracotta'
-  | 'lavender'
-  | 'sage'
-  | 'electric-red';
+  | 'sage';
 
 export interface Note {
   id: string;
@@ -26,6 +34,7 @@ export interface Note {
   checklist: ChecklistItem[];
   reminder: string | null;
   tags: string[];
+  imageUrl?: string | null;
   createdAt: string;
   updatedAt: string;
 }

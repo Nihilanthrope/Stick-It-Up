@@ -117,4 +117,49 @@ describe('StickyNote Component', () => {
       ],
     });
   });
+
+  it('renders attached image and allows removing it', () => {
+    const onUpdate = vi.fn();
+    const noteWithImage: Note = {
+      ...mockNote,
+      imageUrl: 'data:image/jpeg;base64,/9j/fake',
+    };
+
+    render(
+      <StickyNote
+        note={noteWithImage}
+        onUpdate={onUpdate}
+        onDelete={vi.fn()}
+        onFloatOverlay={vi.fn()}
+      />
+    );
+
+    const img = screen.getByRole('img', { name: /test sticky note/i });
+    expect(img).toBeInTheDocument();
+
+    const removeBtn = screen.getByLabelText(/remove image/i);
+    fireEvent.click(removeBtn);
+    expect(onUpdate).toHaveBeenCalledWith('note-test-1', { imageUrl: null });
+  });
+
+  it('opens color palette and allows changing theme color', () => {
+    const onUpdate = vi.fn();
+    render(
+      <StickyNote
+        note={mockNote}
+        onUpdate={onUpdate}
+        onDelete={vi.fn()}
+        onFloatOverlay={vi.fn()}
+      />
+    );
+
+    const paletteBtn = screen.getByTitle(/change note paper color/i);
+    fireEvent.click(paletteBtn);
+
+    const canaryBtn = screen.getByTitle('Canary Yellow');
+    expect(canaryBtn).toBeInTheDocument();
+    fireEvent.click(canaryBtn);
+
+    expect(onUpdate).toHaveBeenCalledWith('note-test-1', { color: 'yellow' });
+  });
 });

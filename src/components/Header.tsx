@@ -56,7 +56,7 @@ export const Header: React.FC<HeaderProps> = ({
   archivedCount,
 }) => {
   return (
-    <header className="sticky top-0 z-40 bg-[#FAF7F2]/95 backdrop-blur-md border-b border-cream-300/80 px-3 py-2.5 sm:px-6 sm:py-3 shadow-xs">
+    <header className="sticky top-0 z-40 bg-[#FAF7F2]/95 backdrop-blur-md border-b border-cream-300/80 px-3 pt-[max(0.6rem,env(safe-area-inset-top))] pb-2.5 sm:px-6 sm:py-3 shadow-xs">
       <div className="max-w-7xl mx-auto flex flex-col gap-2">
         {/* Top Bar: Brand + Actions */}
         <div className="flex items-center justify-between gap-2">
@@ -144,11 +144,12 @@ export const Header: React.FC<HeaderProps> = ({
               )}
             </button>
 
-            {/* Settings (Desktop only) */}
+            {/* Settings */}
             <button
               onClick={onOpenSettings}
-              className="hidden md:flex p-2 rounded-lg text-stone-600 hover:text-stone-900 hover:bg-cream-200 border border-transparent hover:border-cream-300 transition touch-manipulation"
+              className="p-1.5 sm:p-2 rounded-lg text-stone-600 hover:text-stone-900 hover:bg-cream-200 border border-transparent hover:border-cream-300 transition touch-manipulation"
               title="Settings"
+              aria-label="Settings"
             >
               <Settings className="w-4 h-4" />
             </button>

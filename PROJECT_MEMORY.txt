@@ -132,3 +132,26 @@ STICK UP NOTES - PROJECT MEMORY & ARCHITECTURE STATUS
 - Corner Floating Utility Pill:
   * Converted the full-width "Fit notes to screen" banner into a sleek floating pill pinned in the top-right corner of the canvas.
 - Verification: 33 Vitest tests pass; TypeScript check passes with 0 errors; Web and Android APK builds succeeded; Android APK installed to connected phone (`7D9LJF6P6LLZSKLJ`).
+
+11. Settings, Distinct Color Themes, Image Attachments & WebView Hardening (2026-10-30)
+- Settings Accessibility & Android WebView Hardening:
+  * Implemented WebChromeClient in MainActivity.kt with onShowFileChooser, onJsAlert, and onJsConfirm, resolving Android WebView file dialog failures and dialog hangs.
+  * Added WindowInsets listener to webView in MainActivity.kt and safe-area top padding in Header.tsx (`pt-[max(0.6rem,env(safe-area-inset-top))]`) and `viewport-fit=cover` in index.html, completely preventing status bar icons and display cutouts from overlapping top navigation.
+  * Replaced window.confirm in SettingsModal with a safe 2-step inline confirmation state (`confirmReset`), eliminating modal freeze risks in mobile WebViews.
+  * Made Settings button accessible directly from both the mobile bottom dock and top header.
+  * Enabled backdrop-click dismissal on SettingsModal (`onClick={onClose}`).
+- Distinct, High-Contrast Color Palette:
+  * Resolved the "colors not changing" user issue: previously, themes (cream, forest, paper, terracotta, electric-red) used nearly identical pale creams (#F5EFE3, #F4F0E6, #EFE9DC, #EFE2CF) with deltaE < 2.
+  * Upgraded palette to distinct, vibrant pastel sticky note hues: Canary Yellow (#FEF08A), Cream & Crimson (#FFFDF5), Fresh Mint (#DCFCE7), Sky Blue (#E0F2FE), Rose Pink (#FFE4E6), Pastel Lavender (#F3E8FF), Warm Peach (#FFEDD5), Matcha Lime (#ECFCCB), Dark Velvet (#1E1E24), Kraft Paper (#EAE0D0), and Electric Crimson (#FEE2E2).
+  * Maintained full backward compatibility with legacy theme names (paper, forest, midnight, terracotta, sage, electric-red) via aliases.
+- Native Image Attachment & Compression:
+  * Added `imageUrl?: string | null` to Note interface, normalizeNote, createNote, and duplicateNote in NotesStore.
+  * Added image attachment button (`ImageIcon`) and file picker input (`accept="image/*"`) on both main sticky notes and the floating overlay.
+  * Added automatic canvas-based image downscaling (max dimension 800px, JPEG quality 0.82) so attached photos store efficiently in localStorage (~30-70 KB per photo) without quota exhaustion.
+  * Rendered attached images with smooth rounded styling and one-click remove buttons (`×`).
+- Verification:
+  * 37 Vitest unit tests pass across 7 test suites (`npm test`).
+  * TypeScript typecheck passes with 0 errors (`npm run typecheck`).
+  * Production web build succeeds (`npm run build`).
+  * Android Gradle assembleDebug succeeds and APK verified installed on physical Android 16 device (`CPH2705`).
+  * Android UI hierarchy dumped and verified with Settings, all distinct color swatches, and note actions rendered correctly.

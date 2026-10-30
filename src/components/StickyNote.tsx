@@ -13,7 +13,8 @@ import {
   Tag,
   Check,
   AlertTriangle,
-  GripHorizontal
+  GripHorizontal,
+  Image as ImageIcon
 } from 'lucide-react';
 import { Note, ChecklistItem } from '../lib/notes/types';
 import { getTheme, NOTE_THEMES } from '../lib/theme';
@@ -53,7 +54,54 @@ export const StickyNote: React.FC<StickyNoteProps> = ({
   const newChecklistInputRef = useRef<HTMLInputElement>(null);
   const newTagInputRef = useRef<HTMLInputElement>(null);
   const colorPickerRef = useRef<HTMLDivElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
   const noteRef = useRef<HTMLDivElement>(null);
+
+  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target?.result as string;
+      if (!dataUrl) return;
+
+      const img = new Image();
+      img.onload = () => {
+        const maxDim = 800;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressed = canvas.toDataURL('image/jpeg', 0.82);
+          onUpdate(note.id, { imageUrl: compressed });
+        } else {
+          onUpdate(note.id, { imageUrl: dataUrl });
+        }
+      };
+      img.onerror = () => {
+        onUpdate(note.id, { imageUrl: dataUrl });
+      };
+      img.src = dataUrl;
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
 
   // Subtle natural angle for physical note feel
   const rotationDegrees = React.useMemo(() => {
@@ -296,6 +344,29 @@ export const StickyNote: React.FC<StickyNoteProps> = ({
         </div>
       </div>
 
+      {/* Attached Image (if present) */}
+      {note.imageUrl && (
+        <div className="relative my-1.5 rounded-lg overflow-hidden border border-black/10 bg-black/5 group/img shrink-0 shadow-2xs">
+          <img
+            src={note.imageUrl}
+            alt={note.title || 'Note attachment'}
+            className="w-full max-h-48 object-cover rounded-lg"
+            loading="lazy"
+          />
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onUpdate(note.id, { imageUrl: null });
+            }}
+            className="absolute top-1.5 right-1.5 p-1 rounded-full bg-stone-900/70 hover:bg-crimson-600 text-white transition shadow-sm"
+            title="Remove image"
+            aria-label="Remove image"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
       {/* Content Textarea */}
       <textarea
         value={note.content}
@@ -522,30 +593,51 @@ export const StickyNote: React.FC<StickyNoteProps> = ({
             {/* Color Palette Popover */}
             {showColorPicker && (
               <div 
-                className="absolute left-0 bottom-full mb-1 z-30 grid grid-cols-4 gap-1.5 p-2 bg-white rounded-lg shadow-xl border border-stone-200 w-44 animate-in fade-in zoom-in-95"
+                className="absolute left-0 bottom-full mb-1 z-30 grid grid-cols-5 gap-2 p-2.5 bg-white rounded-xl shadow-2xl border border-stone-200 w-52 animate-in fade-in zoom-in-95"
                 onClick={(e) => e.stopPropagation()}
               >
-                {Object.values(NOTE_THEMES).map((t) => (
-                  <button
-                    key={t.id}
-                    onClick={() => {
-                      onUpdate(note.id, { color: t.id });
-                      setShowColorPicker(false);
-                    }}
-                    style={{ backgroundColor: t.bg, borderColor: t.border }}
-                    className={`w-7 h-7 rounded-full border shadow-xs transition transform hover:scale-110 flex items-center justify-center ${
-                      note.color === t.id ? 'ring-2 ring-crimson-600 ring-offset-1' : ''
-                    }`}
-                    title={t.name}
-                  >
-                    {note.color === t.id && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-crimson-700" />
-                    )}
-                  </button>
-                ))}
+                {Object.values(NOTE_THEMES)
+                  .filter((t, index, self) => self.findIndex((s) => s.bg === t.bg) === index)
+                  .map((t) => (
+                    <button
+                      key={t.id}
+                      onClick={() => {
+                        onUpdate(note.id, { color: t.id });
+                        setShowColorPicker(false);
+                      }}
+                      style={{ backgroundColor: t.bg, borderColor: t.border }}
+                      className={`w-7 h-7 rounded-full border-2 shadow-xs transition transform hover:scale-115 flex items-center justify-center ${
+                        note.color === t.id ? 'ring-2 ring-crimson-600 ring-offset-1 scale-105' : ''
+                      }`}
+                      title={t.name}
+                    >
+                      {note.color === t.id && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-crimson-700" />
+                      )}
+                    </button>
+                  ))}
               </div>
             )}
           </div>
+
+          {/* Image Attachment Button */}
+          <button
+            onClick={() => imageInputRef.current?.click()}
+            className={`p-1.5 rounded hover:bg-black/5 transition ${
+              note.imageUrl ? 'text-crimson-600 font-bold' : 'text-stone-500 hover:text-stone-800'
+            }`}
+            title={note.imageUrl ? 'Replace image' : 'Attach image'}
+            aria-label="Attach image"
+          >
+            <ImageIcon className="w-3.5 h-3.5" />
+          </button>
+          <input
+            ref={imageInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleImageFileChange}
+          />
 
           {/* Reminder / Bell Button */}
           <button

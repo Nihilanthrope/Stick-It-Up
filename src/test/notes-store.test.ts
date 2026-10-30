@@ -131,4 +131,22 @@ describe('NotesStore', () => {
     unsub();
     store.destroy();
   });
+
+  it('attaches, updates, and persists imageUrl on notes', () => {
+    const store = new NotesStore();
+    const testImage = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+    const note = store.createNote({
+      title: 'Image Note',
+      imageUrl: testImage,
+    });
+
+    expect(note.imageUrl).toBe(testImage);
+    const retrieved = store.getNote(note.id);
+    expect(retrieved?.imageUrl).toBe(testImage);
+
+    // Update image
+    store.updateNote(note.id, { imageUrl: null });
+    expect(store.getNote(note.id)?.imageUrl).toBeNull();
+    store.destroy();
+  });
 });

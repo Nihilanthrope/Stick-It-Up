@@ -11,7 +11,8 @@ import {
   Palette,
   Check,
   Tag,
-  Bell
+  Bell,
+  Image as ImageIcon
 } from 'lucide-react';
 import { Note, ChecklistItem } from '../lib/notes/types';
 import { NotesStore, getNotesStore } from '../lib/notes/store';
@@ -50,8 +51,53 @@ export const FloatingOverlayView: React.FC<FloatingOverlayViewProps> = ({
   const newChecklistInputRef = useRef<HTMLInputElement>(null);
   const colorPickerRef = useRef<HTMLDivElement>(null);
   const notePickerRef = useRef<HTMLDivElement>(null);
+  const overlayImageInputRef = useRef<HTMLInputElement>(null);
   const androidDragRef = useRef<{ x: number; y: number } | null>(null);
   const isAndroidOverlay = detectPlatform() === 'android';
+
+  const handleOverlayImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target?.result as string;
+      if (!dataUrl) return;
+
+      const img = new Image();
+      img.onload = () => {
+        const maxDim = 800;
+        let width = img.width;
+        let height = img.height;
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressed = canvas.toDataURL('image/jpeg', 0.82);
+          handleUpdate({ imageUrl: compressed });
+        } else {
+          handleUpdate({ imageUrl: dataUrl });
+        }
+      };
+      img.onerror = () => {
+        handleUpdate({ imageUrl: dataUrl });
+      };
+      img.src = dataUrl;
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
 
   // Sync state with controller and external store changes
   useEffect(() => {
@@ -308,26 +354,46 @@ export const FloatingOverlayView: React.FC<FloatingOverlayViewProps> = ({
 
             {showColorPicker && (
               <div 
-                className="absolute right-0 top-full mt-1 z-40 grid grid-cols-4 gap-1 p-1.5 bg-white rounded-lg shadow-xl border border-stone-200 w-36"
+                className="absolute right-0 top-full mt-1 z-40 grid grid-cols-5 gap-1.5 p-2 bg-white rounded-xl shadow-2xl border border-stone-200 w-44"
                 onClick={(e) => e.stopPropagation()}
               >
-                {Object.values(NOTE_THEMES).map((t) => (
-                  <button
-                    key={t.id}
-                    onClick={() => {
-                      handleUpdate({ color: t.id });
-                      setShowColorPicker(false);
-                    }}
-                    style={{ backgroundColor: t.bg, borderColor: t.border }}
-                    className={`w-6 h-6 rounded-full border shadow-xs transition transform hover:scale-110 flex items-center justify-center ${
-                      currentNote?.color === t.id ? 'ring-2 ring-crimson-600 ring-offset-1' : ''
-                    }`}
-                    title={t.name}
-                  />
-                ))}
+                {Object.values(NOTE_THEMES)
+                  .filter((t, index, self) => self.findIndex((s) => s.bg === t.bg) === index)
+                  .map((t) => (
+                    <button
+                      key={t.id}
+                      onClick={() => {
+                        handleUpdate({ color: t.id });
+                        setShowColorPicker(false);
+                      }}
+                      style={{ backgroundColor: t.bg, borderColor: t.border }}
+                      className={`w-6 h-6 rounded-full border-2 shadow-xs transition transform hover:scale-115 flex items-center justify-center ${
+                        currentNote?.color === t.id ? 'ring-2 ring-crimson-600 ring-offset-1 scale-105' : ''
+                      }`}
+                      title={t.name}
+                    />
+                  ))}
               </div>
             )}
           </div>
+
+          {/* Attach / Change Image */}
+          <button
+            onClick={() => overlayImageInputRef.current?.click()}
+            className={`p-1 rounded hover:bg-black/10 transition ${
+              currentNote?.imageUrl ? 'text-crimson-600 font-bold' : 'text-stone-600'
+            }`}
+            title={currentNote?.imageUrl ? 'Replace image' : 'Attach image'}
+          >
+            <ImageIcon className="w-3.5 h-3.5" />
+          </button>
+          <input
+            ref={overlayImageInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleOverlayImageChange}
+          />
 
           <button
             onClick={handleQuickCreate}
@@ -369,6 +435,25 @@ export const FloatingOverlayView: React.FC<FloatingOverlayViewProps> = ({
 
       {/* Note Body */}
       <div className="flex flex-col flex-grow p-3 overflow-y-auto space-y-2">
+        {/* Attached Image (if present) */}
+        {currentNote?.imageUrl && (
+          <div className="relative my-1 rounded-md overflow-hidden border border-black/10 bg-black/5 shrink-0 max-h-36">
+            <img
+              src={currentNote.imageUrl}
+              alt={currentNote.title || 'Note attachment'}
+              className="w-full max-h-36 object-cover rounded-md"
+              loading="lazy"
+            />
+            <button
+              onClick={() => handleUpdate({ imageUrl: null })}
+              className="absolute top-1 right-1 p-0.5 rounded-full bg-stone-900/70 hover:bg-crimson-600 text-white shadow-xs"
+              title="Remove image"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          </div>
+        )}
+
         {/* Title Input */}
         <input
           type="text"

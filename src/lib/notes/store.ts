@@ -125,6 +125,7 @@ export class NotesStore {
             }))
         : [],
       reminder: typeof raw.reminder === 'string' && !Number.isNaN(new Date(raw.reminder).getTime()) ? raw.reminder : null,
+      imageUrl: typeof raw.imageUrl === 'string' && raw.imageUrl ? raw.imageUrl : null,
       tags: Array.isArray(raw.tags)
         ? Array.from(new Set(raw.tags.filter((tag): tag is string => typeof tag === 'string' && tag.trim().length > 0).map(t => t.trim().replace(/^#+/, ''))))
         : [],
@@ -219,6 +220,7 @@ export class NotesStore {
       zIndex: this.getNextZIndex(),
       checklist: partial.checklist || [],
       reminder: partial.reminder || null,
+      imageUrl: partial.imageUrl || null,
       tags: partial.tags || [],
       createdAt: now,
       updatedAt: now,

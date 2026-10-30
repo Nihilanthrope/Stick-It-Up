@@ -52,6 +52,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   );
   const [requestingPerm, setRequestingPerm] = useState(false);
   const [importStatus, setImportStatus] = useState<string | null>(null);
+  const [confirmReset, setConfirmReset] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -138,7 +139,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/40 backdrop-blur-xs">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/40 backdrop-blur-xs"
+      onClick={onClose}
+    >
       <div 
         className="w-full max-w-lg bg-cream-50 rounded-xl shadow-2xl border border-cream-300 overflow-hidden text-stone-800 animate-in fade-in zoom-in-95 duration-150 flex flex-col max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
@@ -320,26 +324,28 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               <Palette className="w-3.5 h-3.5 text-crimson-600" />
               Default New Note Color
             </h3>
-            <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
-              {Object.values(NOTE_THEMES).map((theme) => (
-                <button
-                  key={theme.id}
-                  onClick={() => onDefaultColorChange(theme.id)}
-                  style={{ backgroundColor: theme.bg, borderColor: theme.border }}
-                  className={`flex flex-col items-center justify-center p-2 rounded-lg border shadow-xs transition transform hover:scale-105 ${
-                    defaultColor === theme.id ? 'ring-2 ring-crimson-600 ring-offset-1' : ''
-                  }`}
-                  title={theme.name}
-                >
-                  <span
-                    className="w-4 h-4 rounded-full border shadow-xs mb-1"
-                    style={{ backgroundColor: theme.pin }}
-                  />
-                  <span className="text-[9px] font-medium text-stone-700 truncate w-full text-center">
-                    {theme.name.split(' ')[0]}
-                  </span>
-                </button>
-              ))}
+            <div className="grid grid-cols-5 gap-2">
+              {Object.values(NOTE_THEMES)
+                .filter((theme, index, self) => self.findIndex((s) => s.bg === theme.bg) === index)
+                .map((theme) => (
+                  <button
+                    key={theme.id}
+                    onClick={() => onDefaultColorChange(theme.id)}
+                    style={{ backgroundColor: theme.bg, borderColor: theme.border }}
+                    className={`flex flex-col items-center justify-center p-2 rounded-lg border-2 shadow-xs transition transform hover:scale-105 ${
+                      defaultColor === theme.id ? 'ring-2 ring-crimson-600 ring-offset-1 scale-105 font-bold' : ''
+                    }`}
+                    title={theme.name}
+                  >
+                    <span
+                      className="w-4 h-4 rounded-full border shadow-xs mb-1"
+                      style={{ backgroundColor: theme.pin }}
+                    />
+                    <span className="text-[9px] font-medium text-stone-800 truncate w-full text-center">
+                      {theme.name.split(' ')[0]}
+                    </span>
+                  </button>
+                ))}
             </div>
           </section>
 
@@ -372,14 +378,37 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 className="hidden"
               />
 
-              <button
-                onClick={handleResetDefaults}
-                className="flex items-center justify-center gap-1.5 px-3 py-2 bg-white hover:bg-red-50 border border-cream-300 hover:border-red-200 rounded-lg text-xs font-medium text-stone-600 hover:text-crimson-700 transition"
-                title="Restore default welcome templates"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>Reset Demo</span>
-              </button>
+              {confirmReset ? (
+                <div className="flex items-center justify-center gap-1.5 p-1 bg-red-50 border border-red-200 rounded-lg">
+                  <span className="text-[10px] text-crimson-800 font-bold">Reset?</span>
+                  <button
+                    onClick={() => {
+                      store.resetToDefaults();
+                      setConfirmReset(false);
+                      setImportStatus('Sample notes restored.');
+                      setTimeout(() => setImportStatus(null), 3000);
+                    }}
+                    className="px-2 py-0.5 bg-crimson-600 text-white text-[10px] font-bold rounded hover:bg-crimson-700"
+                  >
+                    Yes
+                  </button>
+                  <button
+                    onClick={() => setConfirmReset(false)}
+                    className="px-2 py-0.5 bg-white text-stone-600 text-[10px] rounded border border-stone-200"
+                  >
+                    No
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setConfirmReset(true)}
+                  className="flex items-center justify-center gap-1.5 px-3 py-2 bg-white hover:bg-red-50 border border-cream-300 hover:border-red-200 rounded-lg text-xs font-medium text-stone-600 hover:text-crimson-700 transition"
+                  title="Restore default welcome templates"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Reset Demo</span>
+                </button>
+              )}
             </div>
           </section>
 
